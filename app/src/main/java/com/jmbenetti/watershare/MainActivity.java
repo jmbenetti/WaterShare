@@ -28,7 +28,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
-
+//
     Button btnCompartir;
     ImageView imageView;
     double nEscala = 1;
