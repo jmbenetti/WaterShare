@@ -95,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnArriba.set
 
         btnArriba.setOnClickListener(new View.OnClickListener() {
             @Override
