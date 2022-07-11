@@ -1,5 +1,6 @@
 package com.jmbenetti.watershare;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -9,18 +10,22 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
     Button btnDerecha;
     Button btnAbajo;
     Button btnArriba;
+    Button btnImagen;
+    Button btnMarca;
+    Bitmap bmpElegido;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +60,9 @@ public class MainActivity extends AppCompatActivity {
         btnArriba = findViewById(R.id.btnArriba);
         btnIzquierda = findViewById(R.id.btnIzquierda);
         btnDerecha = findViewById(R.id.btnDerecha);
+        btnImagen = findViewById(R.id.btnImagen);
+        btnMarca = findViewById(R.id.btnMarca);
+        bmpElegido = null;
 
 
         imageView = findViewById(R.id.shareimage);
@@ -139,6 +150,55 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ActivityResultLauncher<Intent> launchSomeActivity
+                = registerForActivityResult(
+                new ActivityResultContracts
+                        .StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode()
+                            == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        // do your operation from here....
+                        if (data != null
+                                && data.getData() != null) {
+                            Uri selectedImageUri = data.getData();
+                            //Bitmap selectedImageBitmap;
+                            try {
+                                bmpElegido
+                                        = MediaStore.Images.Media.getBitmap(
+                                        this.getContentResolver(),
+                                        selectedImageUri);
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                            }
+//                            imageView.setImageBitmap(
+//                                    bmpElegido);
+                            dibujarConMarca();
+                        }
+                    }
+                });
+
+        btnImagen.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                //Toast.makeText(getApplicationContext(), "Cambiar imagen", Toast.LENGTH_SHORT).show();
+                Intent i = new Intent();
+                i.setType("image/*");
+                i.setAction(Intent.ACTION_GET_CONTENT);
+
+                launchSomeActivity.launch(i);
+            }
+        });
+
+
+        btnMarca.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                Toast.makeText(getApplicationContext(), "Cambiar marca", Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
 
@@ -146,10 +206,17 @@ public class MainActivity extends AppCompatActivity {
         Resources res = getResources();
         Drawable drawableMarca = ResourcesCompat.getDrawable(res, R.drawable.marcadeaguaoscura, null);
 
-        // El drawable original
-        Drawable drawableImagen = ResourcesCompat.getDrawable(res, R.drawable.soniquito, null);
-        // Lo convierto en bitmap
-        Bitmap bmpOriginal = ((BitmapDrawable) drawableImagen).getBitmap();
+        // Levanto imagen placeholder si no hay nada seleccionado
+        Drawable drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.soniquito, null);
+
+        Bitmap bmpOriginal = null;
+        if(bmpElegido==null){
+            bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
+        }
+        else
+        {
+            bmpOriginal = bmpElegido;
+        }
 
         // Lo convierto en mutable
         Bitmap mainBitmap = bmpOriginal.copy(Bitmap.Config.ARGB_8888, true);

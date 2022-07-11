@@ -92,4 +92,22 @@
         android:layout_marginBottom="20dp"
         android:text="↓" />
 
+    <Button
+        android:id="@+id/btnImagen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="10dp"
+        android:layout_toEndOf="@+id/btnReducir"
+        android:text="Imagen" />
+
+    <Button
+        android:id="@+id/btnMarca"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="3dp"
+        android:layout_toStartOf="@+id/btnAumentar"
+        android:text="Marca" />
+
 </RelativeLayout>
