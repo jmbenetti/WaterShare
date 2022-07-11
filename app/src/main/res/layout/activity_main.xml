@@ -20,18 +20,6 @@
 
     <!-- We will click on it then shareonlytext
       function will be called-->
-    <Button
-        android:id="@+id/share"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="35dp"
-        android:background="@color/design_default_color_primary"
-        android:padding="10dp"
-        android:text="Pulse para compartir"
-        android:textSize="10dp" />
 
     <Button
         android:id="@+id/btnAumentar"
@@ -48,5 +36,60 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:text="-" />
+
+    <Button
+        android:id="@+id/btnArriba"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/share"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"
+        android:text="↑" />
+
+    <Button
+        android:id="@+id/share"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btnAbajo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="32dp"
+        android:background="@color/design_default_color_primary"
+        android:padding="10dp"
+        android:text="Pulse para compartir"
+        android:textSize="10dp" />
+
+    <Button
+        android:id="@+id/btnIzquierda"
+        android:layout_width="57dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="52dp"
+        android:layout_marginBottom="100dp"
+        android:layout_toStartOf="@+id/share"
+        android:text="←" />
+
+    <Button
+        android:id="@+id/btnDerecha"
+        android:layout_width="57dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="49dp"
+        android:layout_marginEnd="1dp"
+        android:layout_marginBottom="100dp"
+        android:layout_toEndOf="@+id/share"
+        android:text="→" />
+
+    <Button
+        android:id="@+id/btnAbajo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:text="↓" />
 
 </RelativeLayout>

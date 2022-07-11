@@ -24,22 +24,36 @@ import java.io.FileOutputStream;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button share;
+    Button btnCompartir;
     ImageView imageView;
     double nEscala = 1;
     double nMinimo = 0.1;
     double nMaximo = 10;
     double nVariacion = 0.1;
+    int nDesplazamiento = 20;
+    int nPosX = 0;
+    int nPosY = 0;
+    int nMaxDesplazamiento = 4000;
     Button btnAumentar;
     Button btnReducir;
+    Button btnIzquierda;
+    Button btnDerecha;
+    Button btnAbajo;
+    Button btnArriba;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        share = findViewById(R.id.share);
+        btnCompartir = findViewById(R.id.share);
         btnAumentar = findViewById(R.id.btnAumentar);
         btnReducir = findViewById(R.id.btnReducir);
+        btnAbajo = findViewById(R.id.btnAbajo);
+        btnArriba = findViewById(R.id.btnArriba);
+        btnIzquierda = findViewById(R.id.btnIzquierda);
+        btnDerecha = findViewById(R.id.btnDerecha);
+
+
         imageView = findViewById(R.id.shareimage);
 
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
@@ -50,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         dibujarConMarca();
 
-        share.setOnClickListener(new View.OnClickListener() {
+        btnCompartir.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
@@ -81,6 +95,51 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        btnArriba.set
+
+        btnArriba.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (nPosY - nDesplazamiento >= -nMaxDesplazamiento) {
+                    nPosY -= nDesplazamiento;
+                    dibujarConMarca();
+                }
+            }
+        });
+
+        btnAbajo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                Toast.makeText(getApplicationContext(),"Abajo",Toast.LENGTH_SHORT).show();
+                if (nPosY + nDesplazamiento <= nMaxDesplazamiento) {
+                    nPosY += nDesplazamiento;
+                    dibujarConMarca();
+                }
+            }
+        });
+
+        btnIzquierda.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                Toast.makeText(getApplicationContext(),"Izquierda",Toast.LENGTH_SHORT).show();
+                if (nPosX - nDesplazamiento >= -nMaxDesplazamiento) {
+                    nPosX -= nDesplazamiento;
+                    dibujarConMarca();
+                }
+            }
+        });
+
+        btnDerecha.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                Toast.makeText(getApplicationContext(),"Derecha",Toast.LENGTH_SHORT).show();
+                if (nPosX + nDesplazamiento <= nMaxDesplazamiento) {
+                    nPosX += nDesplazamiento;
+                    dibujarConMarca();
+                }
+            }
+        });
+
     }
 
 
@@ -106,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
         // Creo un canvas con el bitmap mutable
         Canvas canvas = new Canvas(mainBitmap);
         // Pongo la marca de agua
-        canvas.drawBitmap(watermarkBitmap, 0, 0, null);
+        canvas.drawBitmap(watermarkBitmap, nPosX, nPosY, null);
         imageView.setImageDrawable(new BitmapDrawable(getResources(), mainBitmap));
     }
 
