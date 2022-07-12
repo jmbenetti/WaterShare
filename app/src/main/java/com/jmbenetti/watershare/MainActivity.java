@@ -232,7 +232,8 @@ public class MainActivity extends AppCompatActivity {
                             catch (IOException e) {
                                 e.printStackTrace();
                             }
-
+                            nPosicionXMarca = 0;
+                            nPosicionYMarca = 0;
                             dibujarConMarca();
                         }
                     }
@@ -258,7 +259,8 @@ public class MainActivity extends AppCompatActivity {
                             catch (IOException e) {
                                 e.printStackTrace();
                             }
-
+                            nPosicionXMarca = 0;
+                            nPosicionYMarca = 0;
                             dibujarConMarca();
                         }
                     }
