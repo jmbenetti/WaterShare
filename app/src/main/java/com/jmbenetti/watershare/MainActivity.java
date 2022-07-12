@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnImagen;
     Button btnMarca;
     Bitmap bmpElegido;
+    Bitmap bmpMarcaElegida;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,14 +81,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
                 Bitmap bitmap = bitmapDrawable.getBitmap();
-                shareImageandText(bitmap);
+                compartirImagenConTexto(bitmap);
             }
         });
 
         btnAumentar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Toast.makeText(getApplicationContext(),"Aumentar",Toast.LENGTH_SHORT).show();
                 if (nEscala + nVariacion <= nMaximo) {
                     nEscala += nVariacion;
                     dibujarConMarca();
@@ -98,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
         btnReducir.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Toast.makeText(getApplicationContext(),"Reducir",Toast.LENGTH_SHORT).show();
                 if (nEscala - nVariacion >= nMinimo) {
                     nEscala -= nVariacion;
                     dibujarConMarca();
@@ -120,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
         btnAbajo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Toast.makeText(getApplicationContext(),"Abajo",Toast.LENGTH_SHORT).show();
                 if (nPosY + nDesplazamiento <= nMaxDesplazamiento) {
                     nPosY += nDesplazamiento;
                     dibujarConMarca();
@@ -131,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
         btnIzquierda.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Toast.makeText(getApplicationContext(),"Izquierda",Toast.LENGTH_SHORT).show();
                 if (nPosX - nDesplazamiento >= -nMaxDesplazamiento) {
                     nPosX -= nDesplazamiento;
                     dibujarConMarca();
@@ -142,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
         btnDerecha.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Toast.makeText(getApplicationContext(),"Derecha",Toast.LENGTH_SHORT).show();
                 if (nPosX + nDesplazamiento <= nMaxDesplazamiento) {
                     nPosX += nDesplazamiento;
                     dibujarConMarca();
@@ -150,30 +146,53 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ActivityResultLauncher<Intent> launchSomeActivity
+        ActivityResultLauncher<Intent> actCargarImagen
                 = registerForActivityResult(
                 new ActivityResultContracts
                         .StartActivityForResult(),
                 result -> {
                     if (result.getResultCode()
                             == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        // do your operation from here....
-                        if (data != null
-                                && data.getData() != null) {
-                            Uri selectedImageUri = data.getData();
-                            //Bitmap selectedImageBitmap;
+                        Intent datos = result.getData();
+                        if (datos != null
+                                && datos.getData() != null) {
+                            Uri uriImagenElegida = datos.getData();
                             try {
                                 bmpElegido
                                         = MediaStore.Images.Media.getBitmap(
                                         this.getContentResolver(),
-                                        selectedImageUri);
+                                        uriImagenElegida);
                             }
                             catch (IOException e) {
                                 e.printStackTrace();
                             }
-//                            imageView.setImageBitmap(
-//                                    bmpElegido);
+
+                            dibujarConMarca();
+                        }
+                    }
+                });
+
+        ActivityResultLauncher<Intent> actCargarMarca
+                = registerForActivityResult(
+                new ActivityResultContracts
+                        .StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode()
+                            == Activity.RESULT_OK) {
+                        Intent datos = result.getData();
+                        if (datos != null
+                                && datos.getData() != null) {
+                            Uri uriImagenElegida = datos.getData();
+                            try {
+                                bmpMarcaElegida
+                                        = MediaStore.Images.Media.getBitmap(
+                                        this.getContentResolver(),
+                                        uriImagenElegida);
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
                             dibujarConMarca();
                         }
                     }
@@ -182,12 +201,11 @@ public class MainActivity extends AppCompatActivity {
         btnImagen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v){
-                //Toast.makeText(getApplicationContext(), "Cambiar imagen", Toast.LENGTH_SHORT).show();
-                Intent i = new Intent();
-                i.setType("image/*");
-                i.setAction(Intent.ACTION_GET_CONTENT);
+                Intent miIntent = new Intent();
+                miIntent.setType("image/*");
+                miIntent.setAction(Intent.ACTION_GET_CONTENT);
 
-                launchSomeActivity.launch(i);
+                actCargarImagen.launch(miIntent);
             }
         });
 
@@ -195,7 +213,12 @@ public class MainActivity extends AppCompatActivity {
         btnMarca.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v){
-                Toast.makeText(getApplicationContext(), "Cambiar marca", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Cambiar marca", Toast.LENGTH_SHORT).show();
+                Intent miIntent = new Intent();
+                miIntent.setType("image/*");
+                miIntent.setAction(Intent.ACTION_GET_CONTENT);
+
+                actCargarMarca.launch(miIntent);
             }
         });
 
@@ -204,9 +227,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void dibujarConMarca() {
         Resources res = getResources();
+        //Levanto marca placeholder por si no hay nada seleccionado
         Drawable drawableMarca = ResourcesCompat.getDrawable(res, R.drawable.marcadeaguaoscura, null);
 
-        // Levanto imagen placeholder si no hay nada seleccionado
+        // Levanto imagen placeholder por si no hay nada seleccionado
         Drawable drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.soniquito, null);
 
         Bitmap bmpOriginal = null;
@@ -218,15 +242,23 @@ public class MainActivity extends AppCompatActivity {
             bmpOriginal = bmpElegido;
         }
 
-        // Lo convierto en mutable
+        // Convierto el Bitmap elegido en mutable
         Bitmap mainBitmap = bmpOriginal.copy(Bitmap.Config.ARGB_8888, true);
+
         // La marca de agua
-        Bitmap watermarkOriginal = ((BitmapDrawable) drawableMarca).getBitmap();
-        double nAlto = watermarkOriginal.getHeight();
-        double nAncho = watermarkOriginal.getWidth();
+        Bitmap bmpMarca = null;
+        if(bmpMarcaElegida == null) {
+            bmpMarca = ((BitmapDrawable) drawableMarca).getBitmap();
+        }
+        else
+        {
+            bmpMarca = bmpMarcaElegida;
+        }
+        double nAlto = bmpMarca.getHeight();
+        double nAncho = bmpMarca.getWidth();
 
         // La marca de agua cambiada de tamaño
-        Bitmap watermarkBitmap = getResizedBitmap(watermarkOriginal, (int) (nAncho * nEscala),
+        Bitmap watermarkBitmap = redimensionarBitmap(bmpMarca, (int) (nAncho * nEscala),
                 (int) (nAlto * nEscala));
         // Creo un canvas con el bitmap mutable
         Canvas canvas = new Canvas(mainBitmap);
@@ -235,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
         imageView.setImageDrawable(new BitmapDrawable(getResources(), mainBitmap));
     }
 
-    private void shareImageandText(Bitmap bitmap) {
+    private void compartirImagenConTexto(Bitmap bitmap) {
         Uri uri = getmageToShare(bitmap);
         Intent intent = new Intent(Intent.ACTION_SEND);
 
@@ -273,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
         return uri;
     }
 
-    public static Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+    public static Bitmap redimensionarBitmap(Bitmap bm, int newWidth, int newHeight) {
         int width = bm.getWidth();
         int height = bm.getHeight();
         float scaleWidth = ((float) newWidth) / width;
