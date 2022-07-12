@@ -1,5 +1,7 @@
 package com.jmbenetti.watershare;
 
+import static android.view.MotionEvent.INVALID_POINTER_ID;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -11,7 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.view.View;
+import android.view.MotionEvent;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -22,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.MotionEventCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,14 +33,14 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
 //
     Button btnCompartir;
-    ImageView imageView;
+    ImageView imgPrincipal;
     double nEscala = 1;
     double nMinimo = 0.1;
     double nMaximo = 10;
     double nVariacion = 0.1;
     int nDesplazamiento = 20;
-    int nPosX = 0;
-    int nPosY = 0;
+    float nPosicionXMarca = 0;
+    float nPosicionYMarca = 0;
     int nMaxDesplazamiento = 4000;
     Button btnAumentar;
     Button btnReducir;
@@ -49,6 +52,11 @@ public class MainActivity extends AppCompatActivity {
     Button btnMarca;
     Bitmap bmpElegido;
     Bitmap bmpMarcaElegida;
+    int mActivePointerId = INVALID_POINTER_ID;
+    float mLastTouchX;
+    float mLastTouchY;
+    float mPosX;
+    float mPosY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,83 +74,141 @@ public class MainActivity extends AppCompatActivity {
         bmpElegido = null;
 
 
-        imageView = findViewById(R.id.shareimage);
+        imgPrincipal = findViewById(R.id.shareimage);
 
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.MATCH_PARENT
         );
-        imageView.setLayoutParams(params);
+        imgPrincipal.setLayoutParams(params);
+
+        imgPrincipal.setOnTouchListener((v, event) -> {
+
+            final int action = event.getActionMasked();
+
+            switch (action) {
+                case MotionEvent.ACTION_DOWN: {
+                    final int pointerIndex = event.getActionIndex();
+                    final float x = event.getX(pointerIndex);
+                    final float y = event.getY(pointerIndex);
+
+                    // Recordar dónde empezamos(para arrastrar)
+                    mLastTouchX = x;
+                    mLastTouchY = y;
+                    // Guardar el ID de este puntero(para arrastrar)
+                    mActivePointerId = event.getPointerId(0);
+
+                    //Toast.makeText(getApplicationContext(), x + ", " + y, Toast.LENGTH_SHORT).show();
+                    break;
+                }
+
+                case MotionEvent.ACTION_MOVE: {
+                    // Encontrar el índice del puntero activo para obtener su posición
+                    final int pointerIndex = event.findPointerIndex(mActivePointerId);
+
+                    final float x = event.getX(pointerIndex);
+                    final float y = event.getY(pointerIndex);
+
+                    // Calcular la distancia movida
+                    final float dx = x - mLastTouchX;
+                    final float dy = y - mLastTouchY;
+
+                    mPosX += dx;
+                    mPosY += dy;
+
+                    //Asigno la distancia movida a las variables de posición de marca y redibujo
+                    nPosicionXMarca = mPosX;
+                    nPosicionYMarca = mPosY;
+
+                    dibujarConMarca();
+
+                    // Recordar esta posición para el siguiente evento
+                    mLastTouchX = x;
+                    mLastTouchY = y;
+
+                    break;
+                }
+
+                case MotionEvent.ACTION_UP: {
+                    mActivePointerId = INVALID_POINTER_ID;
+                    //Toast.makeText(getApplicationContext(), mPosX + ", " + mPosY, Toast.LENGTH_SHORT).show();
+                    break;
+                }
+
+                case MotionEvent.ACTION_CANCEL: {
+                    mActivePointerId = INVALID_POINTER_ID;
+                    break;
+                }
+
+                case MotionEvent.ACTION_POINTER_UP: {
+
+                    final int pointerIndex = event.getActionIndex();
+                    final int pointerId = event.getPointerId(pointerIndex);
+
+                    if (pointerId == mActivePointerId) {
+                        // Este era nuestro puntero activo. Elegir uno nuevo y ajustar.
+                        final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                        mLastTouchX = event.getX(newPointerIndex);
+                        mLastTouchY = event.getY(newPointerIndex);
+                        mActivePointerId = event.getPointerId(newPointerIndex);
+                    }
+                    break;
+                }
+            }
+            return true;
+
+        });
+
 
         dibujarConMarca();
 
-        btnCompartir.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
-                Bitmap bitmap = bitmapDrawable.getBitmap();
-                compartirImagenConTexto(bitmap);
+
+        btnCompartir.setOnClickListener(v -> {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) imgPrincipal.getDrawable();
+            Bitmap bitmap = bitmapDrawable.getBitmap();
+            compartirImagenConTexto(bitmap);
+        });
+
+        btnAumentar.setOnClickListener(v -> {
+            if (nEscala + nVariacion <= nMaximo) {
+                nEscala += nVariacion;
+                dibujarConMarca();
             }
         });
 
-        btnAumentar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (nEscala + nVariacion <= nMaximo) {
-                    nEscala += nVariacion;
-                    dibujarConMarca();
-                }
-            }
-        });
-
-        btnReducir.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (nEscala - nVariacion >= nMinimo) {
-                    nEscala -= nVariacion;
-                    dibujarConMarca();
-                }
+        btnReducir.setOnClickListener(v -> {
+            if (nEscala - nVariacion >= nMinimo) {
+                nEscala -= nVariacion;
+                dibujarConMarca();
             }
         });
 
 
-        btnArriba.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (nPosY - nDesplazamiento >= -nMaxDesplazamiento) {
-                    nPosY -= nDesplazamiento;
-                    dibujarConMarca();
-                }
+        btnArriba.setOnClickListener(v -> {
+            if (nPosicionYMarca - nDesplazamiento >= -nMaxDesplazamiento) {
+                nPosicionYMarca -= nDesplazamiento;
+                dibujarConMarca();
             }
         });
 
-        btnAbajo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (nPosY + nDesplazamiento <= nMaxDesplazamiento) {
-                    nPosY += nDesplazamiento;
-                    dibujarConMarca();
-                }
+        btnAbajo.setOnClickListener(v -> {
+            if (nPosicionYMarca + nDesplazamiento <= nMaxDesplazamiento) {
+                nPosicionYMarca += nDesplazamiento;
+                dibujarConMarca();
             }
         });
 
-        btnIzquierda.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (nPosX - nDesplazamiento >= -nMaxDesplazamiento) {
-                    nPosX -= nDesplazamiento;
-                    dibujarConMarca();
-                }
+        btnIzquierda.setOnClickListener(v -> {
+            if (nPosicionXMarca - nDesplazamiento >= -nMaxDesplazamiento) {
+                nPosicionXMarca -= nDesplazamiento;
+                dibujarConMarca();
             }
         });
 
-        btnDerecha.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (nPosX + nDesplazamiento <= nMaxDesplazamiento) {
-                    nPosX += nDesplazamiento;
-                    dibujarConMarca();
-                }
+        btnDerecha.setOnClickListener(v -> {
+            if (nPosicionXMarca + nDesplazamiento <= nMaxDesplazamiento) {
+                nPosicionXMarca += nDesplazamiento;
+                dibujarConMarca();
             }
         });
 
@@ -198,28 +264,22 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        btnImagen.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v){
-                Intent miIntent = new Intent();
-                miIntent.setType("image/*");
-                miIntent.setAction(Intent.ACTION_GET_CONTENT);
+        btnImagen.setOnClickListener(v -> {
+            Intent miIntent = new Intent();
+            miIntent.setType("image/*");
+            miIntent.setAction(Intent.ACTION_GET_CONTENT);
 
-                actCargarImagen.launch(miIntent);
-            }
+            actCargarImagen.launch(miIntent);
         });
 
 
-        btnMarca.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v){
-                //Toast.makeText(getApplicationContext(), "Cambiar marca", Toast.LENGTH_SHORT).show();
-                Intent miIntent = new Intent();
-                miIntent.setType("image/*");
-                miIntent.setAction(Intent.ACTION_GET_CONTENT);
+        btnMarca.setOnClickListener(v -> {
+            //Toast.makeText(getApplicationContext(), "Cambiar marca", Toast.LENGTH_SHORT).show();
+            Intent miIntent = new Intent();
+            miIntent.setType("image/*");
+            miIntent.setAction(Intent.ACTION_GET_CONTENT);
 
-                actCargarMarca.launch(miIntent);
-            }
+            actCargarMarca.launch(miIntent);
         });
 
     }
@@ -233,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
         // Levanto imagen placeholder por si no hay nada seleccionado
         Drawable drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.soniquito, null);
 
-        Bitmap bmpOriginal = null;
+        Bitmap bmpOriginal;
         if(bmpElegido==null){
             bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
         }
@@ -263,8 +323,8 @@ public class MainActivity extends AppCompatActivity {
         // Creo un canvas con el bitmap mutable
         Canvas canvas = new Canvas(mainBitmap);
         // Pongo la marca de agua
-        canvas.drawBitmap(watermarkBitmap, nPosX, nPosY, null);
-        imageView.setImageDrawable(new BitmapDrawable(getResources(), mainBitmap));
+        canvas.drawBitmap(watermarkBitmap, nPosicionXMarca, nPosicionYMarca, null);
+        imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), mainBitmap));
     }
 
     private void compartirImagenConTexto(Bitmap bitmap) {
