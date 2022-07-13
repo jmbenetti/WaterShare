@@ -24,14 +24,13 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.core.view.MotionEventCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
-//
+    //
     Button btnCompartir;
     ImageView imgPrincipal;
     double nEscala = 1;
@@ -76,11 +75,11 @@ public class MainActivity extends AppCompatActivity {
 
         imgPrincipal = findViewById(R.id.shareimage);
 
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.MATCH_PARENT,
-                RelativeLayout.LayoutParams.MATCH_PARENT
-        );
-        imgPrincipal.setLayoutParams(params);
+//        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+//                RelativeLayout.LayoutParams.WRAP_CONTENT,
+//                RelativeLayout.LayoutParams.WRAP_CONTENT
+//        );
+//        imgPrincipal.setLayoutParams(params);
 
         imgPrincipal.setOnTouchListener((v, event) -> {
 
@@ -228,8 +227,7 @@ public class MainActivity extends AppCompatActivity {
                                         = MediaStore.Images.Media.getBitmap(
                                         this.getContentResolver(),
                                         uriImagenElegida);
-                            }
-                            catch (IOException e) {
+                            } catch (IOException e) {
                                 e.printStackTrace();
                             }
                             nPosicionXMarca = 0;
@@ -255,8 +253,7 @@ public class MainActivity extends AppCompatActivity {
                                         = MediaStore.Images.Media.getBitmap(
                                         this.getContentResolver(),
                                         uriImagenElegida);
-                            }
-                            catch (IOException e) {
+                            } catch (IOException e) {
                                 e.printStackTrace();
                             }
                             nPosicionXMarca = 0;
@@ -296,11 +293,9 @@ public class MainActivity extends AppCompatActivity {
         Drawable drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.soniquito, null);
 
         Bitmap bmpOriginal;
-        if(bmpElegido==null){
+        if (bmpElegido == null) {
             bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
-        }
-        else
-        {
+        } else {
             bmpOriginal = bmpElegido;
         }
 
@@ -309,11 +304,9 @@ public class MainActivity extends AppCompatActivity {
 
         // La marca de agua
         Bitmap bmpMarca = null;
-        if(bmpMarcaElegida == null) {
+        if (bmpMarcaElegida == null) {
             bmpMarca = ((BitmapDrawable) drawableMarca).getBitmap();
-        }
-        else
-        {
+        } else {
             bmpMarca = bmpMarcaElegida;
         }
         double nAlto = bmpMarca.getHeight();
