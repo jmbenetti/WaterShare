@@ -8,6 +8,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     int nAnchoActualMarca;
     int nAltoActualMarca;
     boolean bArrastrarMarca = false;
+    int nTransparencia = 50;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -326,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
 
         Bitmap bmpOriginal;
         if (bmpElegido == null) {
-            drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.soniquito, null);
+            drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.placeholderimagen, null);
             bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
             bmpOriginal = redimensionarAnchoBitmap(bmpOriginal, nAnchoPredeterminado);
         } else {
@@ -339,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
         // La marca de agua
         Bitmap bmpMarca = null;
         if (bmpMarcaElegida == null) {
-            drawableMarca = ResourcesCompat.getDrawable(res, R.drawable.marcadeaguaoscura, null);
+            drawableMarca = ResourcesCompat.getDrawable(res, R.drawable.defaultwatermark, null);
             bmpMarca = ((BitmapDrawable) drawableMarca).getBitmap();
             bmpMarca = redimensionarAnchoBitmap(bmpMarca, nAnchoPredeterminado);
         } else {
@@ -349,8 +351,11 @@ public class MainActivity extends AppCompatActivity {
         bmpMarca = redimensionarAnchoBitmap(bmpMarca, (int) (nAnchoPredeterminado * nEscala));
         // Creo un canvas con el bitmap mutable
         Canvas canvas = new Canvas(mainBitmap);
+        //Elijo el nivel de transparencia
+        Paint paint = new Paint();
+        paint.setAlpha(nTransparencia);
         // Pongo la marca de agua
-        canvas.drawBitmap(bmpMarca, nPosicionXMarca, nPosicionYMarca, null);
+        canvas.drawBitmap(bmpMarca, nPosicionXMarca, nPosicionYMarca, paint);
         nAnchoActualMarca = bmpMarca.getWidth();
         nAltoActualMarca = bmpMarca.getHeight();
         imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), mainBitmap));
