@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
@@ -17,7 +16,6 @@ import android.provider.MediaStore;
 import android.view.MotionEvent;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -28,8 +26,6 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -37,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     //
     Button btnCompartir;
     ImageView imgPrincipal;
-    double nEscala = 1;
+    double nEscala = .5;
     double nMinimo = 0.1;
     double nMaximo = 10;
     double nVariacion = 0.1;
@@ -61,7 +57,10 @@ public class MainActivity extends AppCompatActivity {
     float mPosX;
     float mPosY;
     int nAnchoPredeterminado = 1024;
-    static int nDensidadPredeterminada = 160;
+    static int nDensidadPredeterminada = 260;
+    int nAnchoActualMarca;
+    int nAltoActualMarca;
+    boolean bArrastrarMarca = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,14 +100,26 @@ public class MainActivity extends AppCompatActivity {
                     final int pointerIndex = event.getActionIndex();
                     final float x = event.getX(pointerIndex);
                     final float y = event.getY(pointerIndex);
-
+                    boolean bCoincideX = false;
+                    boolean bCoincideY = false;
+                    if (x >= nPosicionXMarca && x <= nPosicionXMarca + nAnchoActualMarca) {
+                        bCoincideX = true;
+                    }
+                    if (y >= nPosicionYMarca && y <= nPosicionYMarca + nAltoActualMarca) {
+                        bCoincideY = true;
+                    }
+                    if (bCoincideX && bCoincideY) {
+                        bArrastrarMarca = true;
+                    }
+                    else
+                    {
+                        bArrastrarMarca = false;
+                    }
                     // Recordar dónde empezamos(para arrastrar)
                     mLastTouchX = x;
                     mLastTouchY = y;
                     // Guardar el ID de este puntero(para arrastrar)
                     mActivePointerId = event.getPointerId(0);
-
-                    //Toast.makeText(getApplicationContext(), x + ", " + y, Toast.LENGTH_SHORT).show();
                     break;
                 }
 
@@ -126,11 +137,15 @@ public class MainActivity extends AppCompatActivity {
                     mPosX += dx;
                     mPosY += dy;
 
-                    //Asigno la distancia movida a las variables de posición de marca y redibujo
-                    nPosicionXMarca = mPosX;
-                    nPosicionYMarca = mPosY;
+                    if(bArrastrarMarca) {
+                        //Asigno la distancia movida a las variables de posición de marca y redibujo
+                        nPosicionXMarca = mPosX;
+                        nPosicionYMarca = mPosY;
+                        //System.out.println("Marca en : " + nPosicionXMarca + ", " + nPosicionYMarca);
 
-                    dibujarConMarca();
+
+                        dibujarConMarca();
+                    }
 
                     // Recordar esta posición para el siguiente evento
                     mLastTouchX = x;
@@ -141,12 +156,13 @@ public class MainActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_UP: {
                     mActivePointerId = INVALID_POINTER_ID;
-                    //Toast.makeText(getApplicationContext(), mPosX + ", " + mPosY, Toast.LENGTH_SHORT).show();
+                    bArrastrarMarca = false;
                     break;
                 }
 
                 case MotionEvent.ACTION_CANCEL: {
                     mActivePointerId = INVALID_POINTER_ID;
+                    bArrastrarMarca = false;
                     break;
                 }
 
@@ -242,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
 
-                            bmpElegido = redimensionarAnchoBitmap(bmpElegido,nAnchoPredeterminado);
+                            bmpElegido = redimensionarAnchoBitmap(bmpElegido, nAnchoPredeterminado);
 
                             nPosicionXMarca = 0;
                             nPosicionYMarca = 0;
@@ -272,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            bmpMarcaElegida = redimensionarAnchoBitmap(bmpMarcaElegida,nAnchoPredeterminado);
+                            bmpMarcaElegida = redimensionarAnchoBitmap(bmpMarcaElegida, nAnchoPredeterminado);
                             nPosicionXMarca = 0;
                             nPosicionYMarca = 0;
                             dibujarConMarca();
@@ -330,11 +346,13 @@ public class MainActivity extends AppCompatActivity {
             bmpMarca = bmpMarcaElegida;
         }
         //Ajusto la marca de agua según la escala manual
-        bmpMarca = redimensionarAnchoBitmap(bmpMarca, (int)(nAnchoPredeterminado * nEscala));
+        bmpMarca = redimensionarAnchoBitmap(bmpMarca, (int) (nAnchoPredeterminado * nEscala));
         // Creo un canvas con el bitmap mutable
         Canvas canvas = new Canvas(mainBitmap);
         // Pongo la marca de agua
         canvas.drawBitmap(bmpMarca, nPosicionXMarca, nPosicionYMarca, null);
+        nAnchoActualMarca = bmpMarca.getWidth();
+        nAltoActualMarca = bmpMarca.getHeight();
         imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), mainBitmap));
     }
 
@@ -396,10 +414,9 @@ public class MainActivity extends AppCompatActivity {
     public static Bitmap redimensionarAnchoBitmap(Bitmap bm, int anchoRequerido) {
         int anchoCargado = bm.getWidth();
         int altoCargado = bm.getHeight();
-        double nuevoAlto = (double)anchoRequerido / (double)anchoCargado * (double)altoCargado;
-        return redimensionarBitmap(bm, anchoRequerido, (int)nuevoAlto);
+        double nuevoAlto = (double) anchoRequerido / (double) anchoCargado * (double) altoCargado;
+        return redimensionarBitmap(bm, anchoRequerido, (int) nuevoAlto);
     }
-
 
 
 }
