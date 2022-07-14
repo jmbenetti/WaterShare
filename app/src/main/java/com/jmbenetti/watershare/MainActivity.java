@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
@@ -21,11 +22,14 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -56,11 +60,18 @@ public class MainActivity extends AppCompatActivity {
     float mLastTouchY;
     float mPosX;
     float mPosY;
+    int nAnchoPredeterminado = 1024;
+    static int nDensidadPredeterminada = 160;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowHomeEnabled(true);
+        actionBar.setIcon(R.mipmap.ic_launcher_round);
+
         btnCompartir = findViewById(R.id.share);
         btnAumentar = findViewById(R.id.btnAumentar);
         btnReducir = findViewById(R.id.btnReducir);
@@ -230,8 +241,13 @@ public class MainActivity extends AppCompatActivity {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+
+                            bmpElegido = redimensionarAnchoBitmap(bmpElegido,nAnchoPredeterminado);
+
                             nPosicionXMarca = 0;
                             nPosicionYMarca = 0;
+                            mLastTouchX = 0;
+                            mLastTouchY = 0;
                             dibujarConMarca();
                         }
                     }
@@ -256,6 +272,7 @@ public class MainActivity extends AppCompatActivity {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+                            bmpMarcaElegida = redimensionarAnchoBitmap(bmpMarcaElegida,nAnchoPredeterminado);
                             nPosicionXMarca = 0;
                             nPosicionYMarca = 0;
                             dibujarConMarca();
@@ -286,15 +303,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void dibujarConMarca() {
         Resources res = getResources();
-        //Levanto marca placeholder por si no hay nada seleccionado
-        Drawable drawableMarca = ResourcesCompat.getDrawable(res, R.drawable.marcadeaguaoscura, null);
-
-        // Levanto imagen placeholder por si no hay nada seleccionado
-        Drawable drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.soniquito, null);
+        //Marca placeholder por si no hay nada seleccionado
+        Drawable drawableMarca;
+        // Placeholder imagen por si no hay nada seleccionado
+        Drawable drawablePlaceHolder;
 
         Bitmap bmpOriginal;
         if (bmpElegido == null) {
+            drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.soniquito, null);
             bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
+            bmpOriginal = redimensionarAnchoBitmap(bmpOriginal, nAnchoPredeterminado);
         } else {
             bmpOriginal = bmpElegido;
         }
@@ -305,20 +323,18 @@ public class MainActivity extends AppCompatActivity {
         // La marca de agua
         Bitmap bmpMarca = null;
         if (bmpMarcaElegida == null) {
+            drawableMarca = ResourcesCompat.getDrawable(res, R.drawable.marcadeaguaoscura, null);
             bmpMarca = ((BitmapDrawable) drawableMarca).getBitmap();
+            bmpMarca = redimensionarAnchoBitmap(bmpMarca, nAnchoPredeterminado);
         } else {
             bmpMarca = bmpMarcaElegida;
         }
-        double nAlto = bmpMarca.getHeight();
-        double nAncho = bmpMarca.getWidth();
-
-        // La marca de agua cambiada de tamaño
-        Bitmap watermarkBitmap = redimensionarBitmap(bmpMarca, (int) (nAncho * nEscala),
-                (int) (nAlto * nEscala));
+        //Ajusto la marca de agua según la escala manual
+        bmpMarca = redimensionarAnchoBitmap(bmpMarca, (int)(nAnchoPredeterminado * nEscala));
         // Creo un canvas con el bitmap mutable
         Canvas canvas = new Canvas(mainBitmap);
         // Pongo la marca de agua
-        canvas.drawBitmap(watermarkBitmap, nPosicionXMarca, nPosicionYMarca, null);
+        canvas.drawBitmap(bmpMarca, nPosicionXMarca, nPosicionYMarca, null);
         imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), mainBitmap));
     }
 
@@ -363,6 +379,7 @@ public class MainActivity extends AppCompatActivity {
     public static Bitmap redimensionarBitmap(Bitmap bm, int newWidth, int newHeight) {
         int width = bm.getWidth();
         int height = bm.getHeight();
+        Bitmap bmpResultado;
         float scaleWidth = ((float) newWidth) / width;
         float scaleHeight = ((float) newHeight) / height;
         // Crear matrix para manipulación
@@ -370,8 +387,19 @@ public class MainActivity extends AppCompatActivity {
         // Cambiar tamaño de bitmap
         matrix.postScale(scaleWidth, scaleHeight);
         // Recrear el bitmap
-        return Bitmap.createBitmap(
+        bmpResultado = Bitmap.createBitmap(
                 bm, 0, 0, width, height, matrix, false);
+        bmpResultado.setDensity(nDensidadPredeterminada);
+        return bmpResultado;
     }
+
+    public static Bitmap redimensionarAnchoBitmap(Bitmap bm, int anchoRequerido) {
+        int anchoCargado = bm.getWidth();
+        int altoCargado = bm.getHeight();
+        double nuevoAlto = (double)anchoRequerido / (double)anchoCargado * (double)altoCargado;
+        return redimensionarBitmap(bm, anchoRequerido, (int)nuevoAlto);
+    }
+
+
 
 }
