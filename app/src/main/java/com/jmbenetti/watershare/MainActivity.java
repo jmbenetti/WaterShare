@@ -17,6 +17,7 @@ import android.provider.MediaStore;
 import android.view.MotionEvent;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -44,14 +45,11 @@ public class MainActivity extends AppCompatActivity {
     int nMaxDesplazamiento = 4000;
     Button btnAumentar;
     Button btnReducir;
-    Button btnIzquierda;
-    Button btnDerecha;
-    Button btnAbajo;
-    Button btnArriba;
     Button btnImagen;
     Button btnMarca;
     Bitmap bmpElegido;
     Bitmap bmpMarcaElegida;
+    SeekBar seekBarTransparencia;
     int mActivePointerId = INVALID_POINTER_ID;
     float mLastTouchX;
     float mLastTouchY;
@@ -62,7 +60,8 @@ public class MainActivity extends AppCompatActivity {
     int nAnchoActualMarca;
     int nAltoActualMarca;
     boolean bArrastrarMarca = false;
-    int nTransparencia = 50;
+    int nOpacidadMarca = 50;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,22 +75,38 @@ public class MainActivity extends AppCompatActivity {
         btnCompartir = findViewById(R.id.btnShare);
         btnAumentar = findViewById(R.id.btnAumentar);
         btnReducir = findViewById(R.id.btnReducir);
-//        btnAbajo = findViewById(R.id.btnAbajo);
-//        btnArriba = findViewById(R.id.btnArriba);
-//        btnIzquierda = findViewById(R.id.btnIzquierda);
-//        btnDerecha = findViewById(R.id.btnDerecha);
+
         btnImagen = findViewById(R.id.btnImagen);
         btnMarca = findViewById(R.id.btnMarca);
+        seekBarTransparencia = findViewById(R.id.seekBarTransparencia);
         bmpElegido = null;
+        seekBarTransparencia.setProgress(nOpacidadMarca);
+
+        seekBarTransparencia.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser) {
+                // TODO Auto-generated method stub
+
+                nOpacidadMarca = progress;
+                System.out.println(nOpacidadMarca);
+                dibujarConMarca();
+
+            }
+        });
 
 
         imgPrincipal = findViewById(R.id.shareimage);
-
-//        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
-//                RelativeLayout.LayoutParams.WRAP_CONTENT,
-//                RelativeLayout.LayoutParams.WRAP_CONTENT
-//        );
-//        imgPrincipal.setLayoutParams(params);
 
         imgPrincipal.setOnTouchListener((v, event) -> {
 
@@ -215,34 +230,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-//        btnArriba.setOnClickListener(v -> {
-//            if (nPosicionYMarca - nDesplazamiento >= -nMaxDesplazamiento) {
-//                nPosicionYMarca -= nDesplazamiento;
-//                dibujarConMarca();
-//            }
-//        });
-//
-//        btnAbajo.setOnClickListener(v -> {
-//            if (nPosicionYMarca + nDesplazamiento <= nMaxDesplazamiento) {
-//                nPosicionYMarca += nDesplazamiento;
-//                dibujarConMarca();
-//            }
-//        });
-//
-//        btnIzquierda.setOnClickListener(v -> {
-//            if (nPosicionXMarca - nDesplazamiento >= -nMaxDesplazamiento) {
-//                nPosicionXMarca -= nDesplazamiento;
-//                dibujarConMarca();
-//            }
-//        });
-//
-//        btnDerecha.setOnClickListener(v -> {
-//            if (nPosicionXMarca + nDesplazamiento <= nMaxDesplazamiento) {
-//                nPosicionXMarca += nDesplazamiento;
-//                dibujarConMarca();
-//            }
-//        });
-
         ActivityResultLauncher<Intent> actCargarImagen
                 = registerForActivityResult(
                 new ActivityResultContracts
@@ -356,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
         Canvas canvas = new Canvas(mainBitmap);
         //Elijo el nivel de transparencia
         Paint paint = new Paint();
-        paint.setAlpha(nTransparencia);
+        paint.setAlpha(nOpacidadMarca);
         // Pongo la marca de agua
         canvas.drawBitmap(bmpMarca, nPosicionXMarca, nPosicionYMarca, paint);
         nAnchoActualMarca = bmpMarca.getWidth();
