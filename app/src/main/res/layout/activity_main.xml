@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     android:id="@+id/rlMain"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="16dp"
+    android:background="@color/black"
     tools:context=".MainActivity">
-
-    <ImageView
-        android:id="@+id/shareimage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:adjustViewBounds="true"
-        android:layout_centerInParent="true"
-        android:src="@drawable/soniquito" />
 
     <Button
         android:id="@+id/btnAumentar"
@@ -22,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:background="@drawable/circle"
+        android:backgroundTint="?colorPrimary"
         android:text="+" />
 
     <Button
@@ -31,86 +24,83 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:background="@drawable/circle"
+        android:backgroundTint="?colorPrimary"
         android:text="-" />
 
-    <Button
-        android:id="@+id/btnArriba"
-        android:layout_width="wrap_content"
+    <ImageView
+        android:id="@+id/shareimage"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/share"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="32dp"
-        android:background="@drawable/circle"
-        android:text="↑" />
+        android:layout_centerInParent="true"
+        android:adjustViewBounds="true"
+        android:src="@drawable/placeholderimagen" />
 
-    <Button
-        android:id="@+id/share"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/btnAbajo"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="32dp"
-        android:background="@drawable/circle"
-        android:padding="10dp"
-        android:text="Pulse para compartir"
-        android:textSize="10dp" />
-
-    <Button
-        android:id="@+id/btnIzquierda"
-        android:layout_width="57dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="4dp"
-        android:layout_marginEnd="52dp"
-        android:layout_marginBottom="100dp"
-        android:layout_toStartOf="@+id/share"
-        android:background="@drawable/circle"
-        android:text="←" />
-
-    <Button
-        android:id="@+id/btnDerecha"
-        android:layout_width="57dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="49dp"
-        android:layout_marginEnd="1dp"
-        android:layout_marginBottom="100dp"
-        android:layout_toEndOf="@+id/share"
-        android:background="@drawable/circle"
-        android:text="→" />
-
-    <Button
-        android:id="@+id/btnAbajo"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/menuInferior"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp"
-        android:background="@drawable/circle"
-        android:text="↓" />
+        android:background="?colorPrimary">
 
-    <Button
-        android:id="@+id/btnImagen"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="10dp"
-        android:layout_toEndOf="@+id/btnReducir"
-        android:background="@drawable/circle"
-        android:text="Imagen" />
+        <Button
+            android:id="@+id/btnImagen"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="18dp"
+            android:layout_marginBottom="0dp"
+            android:layout_toStartOf="@id/btnMarca"
+            android:backgroundTint="?colorPrimary"
+            android:padding="10dp"
+            android:text="Load&#10;image&#10;"
+            android:textSize="12sp"
+            app:icon="@android:drawable/ic_menu_upload"
+            app:iconGravity="top" />
 
-    <Button
-        android:id="@+id/btnMarca"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginEnd="3dp"
-        android:layout_toStartOf="@+id/btnAumentar"
-        android:background="@drawable/circle"
-        android:text="Marca" />
+        <Button
+            android:id="@+id/btnMarca"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="0dp"
+            android:layout_toStartOf="@id/btnSave"
+            android:backgroundTint="?colorPrimary"
+            android:padding="10dp"
+            android:text="Load&#10;Watermark"
+            android:textSize="12dp"
+            app:icon="@android:drawable/ic_menu_upload"
+            app:iconGravity="top" />
 
+        <Button
+            android:id="@+id/btnSave"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_toStartOf="@id/btnShare"
+            android:backgroundTint="?colorPrimary"
+            android:padding="10dp"
+            android:text="Save as&#10;default&#10;Watermark"
+            android:textSize="12dp"
+            app:icon="@android:drawable/ic_menu_save"
+            app:iconGravity="top" />
+        <Button
+            android:id="@+id/btnShare"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="0dp"
+            android:backgroundTint="?colorPrimary"
+            android:padding="10dp"
+            android:text="Share&#10;&#10;"
+            android:textSize="12sp"
+            app:icon="@android:drawable/ic_menu_share"
+            app:iconGravity="top" />
+    </LinearLayout>
 </RelativeLayout>

@@ -73,13 +73,13 @@ public class MainActivity extends AppCompatActivity {
         actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setIcon(R.mipmap.ic_launcher_round);
 
-        btnCompartir = findViewById(R.id.share);
+        btnCompartir = findViewById(R.id.btnShare);
         btnAumentar = findViewById(R.id.btnAumentar);
         btnReducir = findViewById(R.id.btnReducir);
-        btnAbajo = findViewById(R.id.btnAbajo);
-        btnArriba = findViewById(R.id.btnArriba);
-        btnIzquierda = findViewById(R.id.btnIzquierda);
-        btnDerecha = findViewById(R.id.btnDerecha);
+//        btnAbajo = findViewById(R.id.btnAbajo);
+//        btnArriba = findViewById(R.id.btnArriba);
+//        btnIzquierda = findViewById(R.id.btnIzquierda);
+//        btnDerecha = findViewById(R.id.btnDerecha);
         btnImagen = findViewById(R.id.btnImagen);
         btnMarca = findViewById(R.id.btnMarca);
         bmpElegido = null;
@@ -112,34 +112,34 @@ public class MainActivity extends AppCompatActivity {
                     }
                     if (bCoincideX && bCoincideY) {
                         bArrastrarMarca = true;
-                    }
-                    else
-                    {
+                        mLastTouchX = x;
+                        mLastTouchY = y;
+                    } else {
                         bArrastrarMarca = false;
                     }
                     // Recordar dónde empezamos(para arrastrar)
-                    mLastTouchX = x;
-                    mLastTouchY = y;
+
                     // Guardar el ID de este puntero(para arrastrar)
                     mActivePointerId = event.getPointerId(0);
                     break;
                 }
 
                 case MotionEvent.ACTION_MOVE: {
-                    // Encontrar el índice del puntero activo para obtener su posición
-                    final int pointerIndex = event.findPointerIndex(mActivePointerId);
+                    if (bArrastrarMarca) {
+                        // Encontrar el índice del puntero activo para obtener su posición
+                        final int pointerIndex = event.findPointerIndex(mActivePointerId);
 
-                    final float x = event.getX(pointerIndex);
-                    final float y = event.getY(pointerIndex);
+                        final float x = event.getX(pointerIndex);
+                        final float y = event.getY(pointerIndex);
 
-                    // Calcular la distancia movida
-                    final float dx = x - mLastTouchX;
-                    final float dy = y - mLastTouchY;
+                        // Calcular la distancia movida
+                        final float dx = x - mLastTouchX;
+                        final float dy = y - mLastTouchY;
 
-                    mPosX += dx;
-                    mPosY += dy;
+                        mPosX += dx;
+                        mPosY += dy;
 
-                    if(bArrastrarMarca) {
+
                         //Asigno la distancia movida a las variables de posición de marca y redibujo
                         nPosicionXMarca = mPosX;
                         nPosicionYMarca = mPosY;
@@ -147,11 +147,12 @@ public class MainActivity extends AppCompatActivity {
 
 
                         dibujarConMarca();
-                    }
 
-                    // Recordar esta posición para el siguiente evento
-                    mLastTouchX = x;
-                    mLastTouchY = y;
+
+                        // Recordar esta posición para el siguiente evento
+                        mLastTouchX = x;
+                        mLastTouchY = y;
+                    }
 
                     break;
                 }
@@ -174,11 +175,13 @@ public class MainActivity extends AppCompatActivity {
                     final int pointerId = event.getPointerId(pointerIndex);
 
                     if (pointerId == mActivePointerId) {
-                        // Este era nuestro puntero activo. Elegir uno nuevo y ajustar.
-                        final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-                        mLastTouchX = event.getX(newPointerIndex);
-                        mLastTouchY = event.getY(newPointerIndex);
-                        mActivePointerId = event.getPointerId(newPointerIndex);
+                        if (bArrastrarMarca) {
+                            // Este era nuestro puntero activo. Elegir uno nuevo y ajustar.
+                            final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                            mLastTouchX = event.getX(newPointerIndex);
+                            mLastTouchY = event.getY(newPointerIndex);
+                            mActivePointerId = event.getPointerId(newPointerIndex);
+                        }
                     }
                     break;
                 }
@@ -212,33 +215,33 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        btnArriba.setOnClickListener(v -> {
-            if (nPosicionYMarca - nDesplazamiento >= -nMaxDesplazamiento) {
-                nPosicionYMarca -= nDesplazamiento;
-                dibujarConMarca();
-            }
-        });
-
-        btnAbajo.setOnClickListener(v -> {
-            if (nPosicionYMarca + nDesplazamiento <= nMaxDesplazamiento) {
-                nPosicionYMarca += nDesplazamiento;
-                dibujarConMarca();
-            }
-        });
-
-        btnIzquierda.setOnClickListener(v -> {
-            if (nPosicionXMarca - nDesplazamiento >= -nMaxDesplazamiento) {
-                nPosicionXMarca -= nDesplazamiento;
-                dibujarConMarca();
-            }
-        });
-
-        btnDerecha.setOnClickListener(v -> {
-            if (nPosicionXMarca + nDesplazamiento <= nMaxDesplazamiento) {
-                nPosicionXMarca += nDesplazamiento;
-                dibujarConMarca();
-            }
-        });
+//        btnArriba.setOnClickListener(v -> {
+//            if (nPosicionYMarca - nDesplazamiento >= -nMaxDesplazamiento) {
+//                nPosicionYMarca -= nDesplazamiento;
+//                dibujarConMarca();
+//            }
+//        });
+//
+//        btnAbajo.setOnClickListener(v -> {
+//            if (nPosicionYMarca + nDesplazamiento <= nMaxDesplazamiento) {
+//                nPosicionYMarca += nDesplazamiento;
+//                dibujarConMarca();
+//            }
+//        });
+//
+//        btnIzquierda.setOnClickListener(v -> {
+//            if (nPosicionXMarca - nDesplazamiento >= -nMaxDesplazamiento) {
+//                nPosicionXMarca -= nDesplazamiento;
+//                dibujarConMarca();
+//            }
+//        });
+//
+//        btnDerecha.setOnClickListener(v -> {
+//            if (nPosicionXMarca + nDesplazamiento <= nMaxDesplazamiento) {
+//                nPosicionXMarca += nDesplazamiento;
+//                dibujarConMarca();
+//            }
+//        });
 
         ActivityResultLauncher<Intent> actCargarImagen
                 = registerForActivityResult(
