@@ -2,6 +2,7 @@ package com.jmbenetti.watershare;
 
 import static android.view.MotionEvent.INVALID_POINTER_ID;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -14,6 +15,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -39,10 +41,8 @@ public class MainActivity extends AppCompatActivity {
     double nMinimo = 0.1;
     double nMaximo = 10;
     double nVariacion = 0.1;
-    int nDesplazamiento = 20;
     float nPosicionXMarca = 0;
     float nPosicionYMarca = 0;
-    int nMaxDesplazamiento = 4000;
     Button btnAumentar;
     Button btnReducir;
     Button btnImagen;
@@ -57,20 +57,44 @@ public class MainActivity extends AppCompatActivity {
     float mPosY;
     int nAnchoPredeterminado = 1024;
     static int nDensidadPredeterminada = 260;
-    int nAnchoActualMarca;
-    int nAltoActualMarca;
+    float nAnchoActualMarca;
+    float nAltoActualMarca;
     boolean bArrastrarMarca = false;
     int nOpacidadMarca = 50;
+    int nDensidadPantalla;
+//    float nDeltaToqueX;
+//    float nDeltaToqueY;
 
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //Recibo imagen compartida por sistema
+        // Get intent, action and MIME type
+
+        // Get intent, action and MIME type
+        Intent intent = getIntent();
+        String accion = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(accion) && type != null) {
+            if (type.startsWith("image/")) {
+                handleSendImage(intent); // Handle single image being sent
+            }
+        }
+        //---Fin de recibir imagen
         super.onCreate(savedInstanceState);
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        nDensidadPantalla = (int)(metrics.density * 160f);
+//        Toast.makeText(getApplicationContext(), densidadPantalla, Toast.LENGTH_LONG);
         setContentView(R.layout.activity_main);
 
+
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowHomeEnabled(true);
-        actionBar.setIcon(R.mipmap.ic_launcher_round);
+        if (actionBar != null) {
+            actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setIcon(R.mipmap.ic_launcher_round);
+        }
 
         btnCompartir = findViewById(R.id.btnShare);
         btnAumentar = findViewById(R.id.btnAumentar);
@@ -95,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser) {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 // TODO Auto-generated method stub
 
                 nOpacidadMarca = progress;
@@ -121,11 +145,14 @@ public class MainActivity extends AppCompatActivity {
                     boolean bCoincideY = false;
                     if (x >= nPosicionXMarca && x <= nPosicionXMarca + nAnchoActualMarca) {
                         bCoincideX = true;
+//                        nDeltaToqueX = x - nPosicionXMarca;
                     }
                     if (y >= nPosicionYMarca && y <= nPosicionYMarca + nAltoActualMarca) {
                         bCoincideY = true;
+//                        nDeltaToqueY = y - nPosicionYMarca;
                     }
-                    if (bCoincideX && bCoincideY) {
+//                    if (bCoincideX && bCoincideY) {
+                      if(true){
                         bArrastrarMarca = true;
                         mLastTouchX = x;
                         mLastTouchY = y;
@@ -155,7 +182,9 @@ public class MainActivity extends AppCompatActivity {
                         mPosY += dy;
 
 
-                        //Asigno la distancia movida a las variables de posición de marca y redibujo
+                        //Asigno la nueva posición a las variables de posición de marca y redibujo
+//                        nPosicionXMarca = mPosX - nDeltaToqueX;
+//                        nPosicionYMarca = mPosY - nDeltaToqueY;
                         nPosicionXMarca = mPosX;
                         nPosicionYMarca = mPosY;
                         //System.out.println("Marca en : " + nPosicionXMarca + ", " + nPosicionYMarca);
@@ -172,13 +201,11 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
 
-                case MotionEvent.ACTION_UP: {
-                    mActivePointerId = INVALID_POINTER_ID;
-                    bArrastrarMarca = false;
-                    break;
-                }
-
+                case MotionEvent.ACTION_UP:
+                    //lo mismo que cancel, sigue abajo
                 case MotionEvent.ACTION_CANCEL: {
+//                    nDeltaToqueX = 0;
+//                    nDeltaToqueY = 0;
                     mActivePointerId = INVALID_POINTER_ID;
                     bArrastrarMarca = false;
                     break;
@@ -204,7 +231,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
 
         });
-
 
         dibujarConMarca();
 
@@ -241,22 +267,7 @@ public class MainActivity extends AppCompatActivity {
                         if (datos != null
                                 && datos.getData() != null) {
                             Uri uriImagenElegida = datos.getData();
-                            try {
-                                bmpElegido
-                                        = MediaStore.Images.Media.getBitmap(
-                                        this.getContentResolver(),
-                                        uriImagenElegida);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-
-                            bmpElegido = redimensionarAnchoBitmap(bmpElegido, nAnchoPredeterminado);
-
-                            nPosicionXMarca = 0;
-                            nPosicionYMarca = 0;
-                            mLastTouchX = 0;
-                            mLastTouchY = 0;
-                            dibujarConMarca();
+                            definirImagenConUri(uriImagenElegida);
                         }
                     }
                 });
@@ -272,18 +283,7 @@ public class MainActivity extends AppCompatActivity {
                         if (datos != null
                                 && datos.getData() != null) {
                             Uri uriImagenElegida = datos.getData();
-                            try {
-                                bmpMarcaElegida
-                                        = MediaStore.Images.Media.getBitmap(
-                                        this.getContentResolver(),
-                                        uriImagenElegida);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            bmpMarcaElegida = redimensionarAnchoBitmap(bmpMarcaElegida, nAnchoPredeterminado);
-                            nPosicionXMarca = 0;
-                            nPosicionYMarca = 0;
-                            dibujarConMarca();
+                            definirMarcaConUri(uriImagenElegida);
                         }
                     }
                 });
@@ -308,6 +308,54 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    void definirImagenConUri(Uri uri) {
+        try {
+            bmpElegido
+                    = MediaStore.Images.Media.getBitmap(
+                    this.getContentResolver(),
+                    uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        bmpElegido = redimensionarAnchoBitmap(bmpElegido, nAnchoPredeterminado);
+
+        reiniciarPosicionMarca();
+        dibujarConMarca();
+    }
+
+    void definirMarcaConUri(Uri uri) {
+        try {
+            bmpMarcaElegida
+                    = MediaStore.Images.Media.getBitmap(
+                    this.getContentResolver(),
+                    uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        bmpMarcaElegida = redimensionarAnchoBitmap(bmpMarcaElegida, nAnchoPredeterminado);
+        reiniciarPosicionMarca();
+        dibujarConMarca();
+    }
+
+    void reiniciarPosicionMarca()
+    {
+        nPosicionXMarca = 0;
+        nPosicionYMarca = 0;
+        mPosX = 0;
+        mPosY = 0;
+        mLastTouchX = 0;
+        mLastTouchY = 0;
+    }
+
+    void handleSendImage(Intent intent) {
+        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (imageUri != null) {
+            //Toast.makeText(this, imageUri.toString(), Toast.LENGTH_LONG).show();
+            definirImagenConUri(imageUri);
+        }
+    }
+
 
     private void dibujarConMarca() {
         Resources res = getResources();
@@ -316,39 +364,67 @@ public class MainActivity extends AppCompatActivity {
         // Placeholder imagen por si no hay nada seleccionado
         Drawable drawablePlaceHolder;
 
-        Bitmap bmpOriginal;
+        Bitmap bmpOriginal = null;
         if (bmpElegido == null) {
             drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.placeholderimagen, null);
-            bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
-            bmpOriginal = redimensionarAnchoBitmap(bmpOriginal, nAnchoPredeterminado);
+            if (drawablePlaceHolder != null) {
+                bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
+                bmpOriginal = redimensionarAnchoBitmap(bmpOriginal, nAnchoPredeterminado);
+            }
         } else {
-            bmpOriginal = bmpElegido;
+            bmpOriginal = bmpElegido.copy(Bitmap.Config.ARGB_8888, true);
         }
 
         // Convierto el Bitmap elegido en mutable
-        Bitmap mainBitmap = bmpOriginal.copy(Bitmap.Config.ARGB_8888, true);
+        //if (bmpOriginal != null) bmpOriginal.copy(Bitmap.Config.ARGB_8888, true);
 
         // La marca de agua
         Bitmap bmpMarca = null;
         if (bmpMarcaElegida == null) {
             drawableMarca = ResourcesCompat.getDrawable(res, R.drawable.defaultwatermark, null);
-            bmpMarca = ((BitmapDrawable) drawableMarca).getBitmap();
-            bmpMarca = redimensionarAnchoBitmap(bmpMarca, nAnchoPredeterminado);
+            if (drawableMarca != null) bmpMarca = ((BitmapDrawable) drawableMarca).getBitmap();
+            if (bmpMarca != null)
+                bmpMarca = redimensionarAnchoBitmap(bmpMarca, nAnchoPredeterminado);
         } else {
             bmpMarca = bmpMarcaElegida;
         }
         //Ajusto la marca de agua según la escala manual
-        bmpMarca = redimensionarAnchoBitmap(bmpMarca, (int) (nAnchoPredeterminado * nEscala));
+        if (bmpMarca != null) {
+            bmpMarca = redimensionarAnchoBitmap(bmpMarca, (int) (nAnchoPredeterminado * nEscala));
+        }
+
+//        Bitmap bmpCanvas = bmpOriginal;
         // Creo un canvas con el bitmap mutable
-        Canvas canvas = new Canvas(mainBitmap);
+        Canvas canvas = new Canvas(bmpOriginal);
         //Elijo el nivel de transparencia
         Paint paint = new Paint();
         paint.setAlpha(nOpacidadMarca);
+
+
         // Pongo la marca de agua
-        canvas.drawBitmap(bmpMarca, nPosicionXMarca, nPosicionYMarca, paint);
-        nAnchoActualMarca = bmpMarca.getWidth();
-        nAltoActualMarca = bmpMarca.getHeight();
-        imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), mainBitmap));
+//        float nPosicionAjustadaX = nPosicionXMarca / nDensidadPantalla * nDensidadPredeterminada;
+//        float nPosicionAjustadaY = nPosicionYMarca / nDensidadPantalla * nDensidadPredeterminada;
+
+        //Variables delta incluyen a qué distancia del borde de la marca toqué
+        //Lo demás es escalado por densidad
+//        float[] point = new float[] {nPosicionXMarca - nDeltaToqueX, nPosicionYMarca - nDeltaToqueY};
+//
+//        Matrix inverse = new Matrix();
+//        imgPrincipal.getImageMatrix().invert(inverse);
+//        inverse.mapPoints(point);
+//
+//        float density = getResources().getDisplayMetrics().density;
+//        point[0] /= density;
+//        point[1] /= density;
+
+        if (bmpMarca != null) {
+//            canvas.drawBitmap(bmpMarca, nPosicionAjustadaX, nPosicionAjustadaY, paint);
+            canvas.drawBitmap(bmpMarca, nPosicionXMarca, nPosicionYMarca, paint);
+//            canvas.drawBitmap(bmpMarca, point[0], point[1], paint);
+            nAnchoActualMarca = bmpMarca.getWidth();
+            nAltoActualMarca = bmpMarca.getHeight();
+        }
+        imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), bmpOriginal));
     }
 
     private void compartirImagenConTexto(Bitmap bitmap) {
@@ -376,7 +452,9 @@ public class MainActivity extends AppCompatActivity {
         File imagefolder = new File(getCacheDir(), "images");
         Uri uri = null;
         try {
-            imagefolder.mkdirs();
+            boolean mkDirOk = imagefolder.mkdirs();
+            //Tiro cualquier cosa para evitar un warning
+            if (mkDirOk) System.out.println(" ");
             File file = new File(imagefolder, "shared_image.png");
             FileOutputStream outputStream = new FileOutputStream(file);
             bitmap.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
