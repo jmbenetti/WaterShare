@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnReducir;
     Button btnImagen;
     Button btnMarca;
+    Button btnSave;
     Bitmap bmpElegido;
     Bitmap bmpMarcaElegida;
     SeekBar seekBarTransparencia;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     boolean bArrastrarMarca = false;
     int nOpacidadMarca = 50;
     int nDensidadPantalla;
+    Uri uriExterno;
 //    float nDeltaToqueX;
 //    float nDeltaToqueY;
 
@@ -99,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         btnCompartir = findViewById(R.id.btnShare);
         btnAumentar = findViewById(R.id.btnAumentar);
         btnReducir = findViewById(R.id.btnReducir);
+        btnSave = findViewById(R.id.btnSave);
 
         btnImagen = findViewById(R.id.btnImagen);
         btnMarca = findViewById(R.id.btnMarca);
@@ -246,8 +249,15 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
+        if(uriExterno != null)
+        {
+            definirImagenConUri(uriExterno);
+        }
         dibujarConMarca();
 
+        btnSave.setOnClickListener(v -> {
+
+        });
 
         btnCompartir.setOnClickListener(v -> {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) imgPrincipal.getDrawable();
@@ -362,10 +372,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void handleSendImage(Intent intent) {
-        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-        if (imageUri != null) {
+//        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        uriExterno = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (uriExterno != null) {
             //Toast.makeText(this, imageUri.toString(), Toast.LENGTH_LONG).show();
-            definirImagenConUri(imageUri);
+            //definirImagenConUri(imageUri);
         }
     }
 
