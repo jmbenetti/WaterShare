@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         //---Fin de recibir imagen
         super.onCreate(savedInstanceState);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
-        nDensidadPantalla = (int)(metrics.density * 160f);
+        nDensidadPantalla = (int) (metrics.density * 160f);
 //        Toast.makeText(getApplicationContext(), densidadPantalla, Toast.LENGTH_LONG);
         setContentView(R.layout.activity_main);
 
@@ -136,33 +136,47 @@ public class MainActivity extends AppCompatActivity {
 
             final int action = event.getActionMasked();
 
+            //Guardo el ancho de la marca en escala de pantalla táctil
+            float f = imgPrincipal.getWidth();
+            nAnchoActualMarca = (float) (bmpMarcaElegida.getWidth() * imgPrincipal.getWidth() /
+                                bmpElegido.getWidth() * nEscala);
+            nAltoActualMarca = (float) (bmpMarcaElegida.getHeight() * imgPrincipal.getHeight()  /
+                                bmpElegido.getHeight() * nEscala);
+
             switch (action) {
                 case MotionEvent.ACTION_DOWN: {
                     final int pointerIndex = event.getActionIndex();
                     final float x = event.getX(pointerIndex);
                     final float y = event.getY(pointerIndex);
-                    boolean bCoincideX = false;
-                    boolean bCoincideY = false;
-                    if (x >= nPosicionXMarca && x <= nPosicionXMarca + nAnchoActualMarca) {
-                        bCoincideX = true;
-//                        nDeltaToqueX = x - nPosicionXMarca;
-                    }
-                    if (y >= nPosicionYMarca && y <= nPosicionYMarca + nAltoActualMarca) {
-                        bCoincideY = true;
-//                        nDeltaToqueY = y - nPosicionYMarca;
-                    }
-//                    if (bCoincideX && bCoincideY) {
-                      if(true){
-                        bArrastrarMarca = true;
-                        mLastTouchX = x;
-                        mLastTouchY = y;
-                    } else {
-                        bArrastrarMarca = false;
-                    }
-                    // Recordar dónde empezamos(para arrastrar)
 
-                    // Guardar el ID de este puntero(para arrastrar)
-                    mActivePointerId = event.getPointerId(0);
+
+                    if (true)
+                    //---
+                    {
+
+                        boolean bCoincideX = false;
+                        boolean bCoincideY = false;
+                        if (x >= nPosicionXMarca && x <= nPosicionXMarca + nAnchoActualMarca) {
+                            bCoincideX = true;
+//                        nDeltaToqueX = x - nPosicionXMarca;
+                        }
+                        if (y >= nPosicionYMarca && y <= nPosicionYMarca + nAltoActualMarca) {
+                            bCoincideY = true;
+//                        nDeltaToqueY = y - nPosicionYMarca;
+                        }
+                        if (bCoincideX && bCoincideY) {
+//                      if(true){
+                            bArrastrarMarca = true;
+                            mLastTouchX = x;
+                            mLastTouchY = y;
+                        } else {
+                            bArrastrarMarca = false;
+                        }
+                        // Recordar dónde empezamos(para arrastrar)
+
+                        // Guardar el ID de este puntero(para arrastrar)
+                        mActivePointerId = event.getPointerId(0);
+                    }
                     break;
                 }
 
@@ -338,8 +352,7 @@ public class MainActivity extends AppCompatActivity {
         dibujarConMarca();
     }
 
-    void reiniciarPosicionMarca()
-    {
+    void reiniciarPosicionMarca() {
         nPosicionXMarca = 0;
         nPosicionYMarca = 0;
         mPosX = 0;
@@ -370,6 +383,8 @@ public class MainActivity extends AppCompatActivity {
             if (drawablePlaceHolder != null) {
                 bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
                 bmpOriginal = redimensionarAnchoBitmap(bmpOriginal, nAnchoPredeterminado);
+                //Guardo la imagen predeterminada como elegida para procesar afuera
+                bmpElegido = bmpOriginal.copy(Bitmap.Config.ARGB_8888, true);
             }
         } else {
             bmpOriginal = bmpElegido.copy(Bitmap.Config.ARGB_8888, true);
@@ -383,8 +398,11 @@ public class MainActivity extends AppCompatActivity {
         if (bmpMarcaElegida == null) {
             drawableMarca = ResourcesCompat.getDrawable(res, R.drawable.defaultwatermark, null);
             if (drawableMarca != null) bmpMarca = ((BitmapDrawable) drawableMarca).getBitmap();
-            if (bmpMarca != null)
+            if (bmpMarca != null) {
                 bmpMarca = redimensionarAnchoBitmap(bmpMarca, nAnchoPredeterminado);
+                //Guardo la marca predeterminada como elegida para procesar afuera
+                bmpMarcaElegida = bmpMarca.copy(Bitmap.Config.ARGB_8888, true);
+            }
         } else {
             bmpMarca = bmpMarcaElegida;
         }
@@ -401,30 +419,25 @@ public class MainActivity extends AppCompatActivity {
         paint.setAlpha(nOpacidadMarca);
 
 
-        // Pongo la marca de agua
-//        float nPosicionAjustadaX = nPosicionXMarca / nDensidadPantalla * nDensidadPredeterminada;
-//        float nPosicionAjustadaY = nPosicionYMarca / nDensidadPantalla * nDensidadPredeterminada;
-
-        //Variables delta incluyen a qué distancia del borde de la marca toqué
-        //Lo demás es escalado por densidad
-//        float[] point = new float[] {nPosicionXMarca - nDeltaToqueX, nPosicionYMarca - nDeltaToqueY};
-//
-//        Matrix inverse = new Matrix();
-//        imgPrincipal.getImageMatrix().invert(inverse);
-//        inverse.mapPoints(point);
-//
-//        float density = getResources().getDisplayMetrics().density;
-//        point[0] /= density;
-//        point[1] /= density;
-
         if (bmpMarca != null) {
-//            canvas.drawBitmap(bmpMarca, nPosicionAjustadaX, nPosicionAjustadaY, paint);
-            canvas.drawBitmap(bmpMarca, nPosicionXMarca, nPosicionYMarca, paint);
-//            canvas.drawBitmap(bmpMarca, point[0], point[1], paint);
-            nAnchoActualMarca = bmpMarca.getWidth();
-            nAltoActualMarca = bmpMarca.getHeight();
+            //Escalo el toque a las dimensiones de la imagen
+            float nPosicionXAjustada = 0f;
+            float nPosicionYAjustada = 0f;
+            if(nPosicionXMarca != 0)
+            {
+                nPosicionXAjustada = nPosicionXMarca / imgPrincipal.getWidth() *
+                        bmpOriginal.getWidth();
+            }
+            if(nPosicionYMarca != 0)
+            {
+                nPosicionYAjustada = nPosicionYMarca / imgPrincipal.getHeight() *
+                        bmpOriginal.getHeight();
+            }
+            canvas.drawBitmap(bmpMarca, nPosicionXAjustada, nPosicionYAjustada, paint);
+
         }
         imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), bmpOriginal));
+
     }
 
     private void compartirImagenConTexto(Bitmap bitmap) {
