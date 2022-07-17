@@ -4,6 +4,8 @@ import static android.view.MotionEvent.INVALID_POINTER_ID;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -141,10 +143,13 @@ public class MainActivity extends AppCompatActivity {
         if (uriExterno != null) {
             definirImagenConUri(uriExterno);
         }
-        dibujarConMarca();
+
+        //Levanto la marca de agua por defecto guardada, si es que existe, y la dibujo
+        definirMarcaConUri(Uri.fromFile(new File("/data/user/0/com.jmbenetti.watershare/app_watermarks/default.png")));
+
 
         btnSave.setOnClickListener(v -> {
-
+            guardarBitmap(bmpMarcaElegida);
         });
 
         btnCompartir.setOnClickListener(v -> {
@@ -255,7 +260,6 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         bArrastrarMarca = false;
                     }
-                    // Recordar dónde empezamos(para arrastrar)
 
                     // Guardar el ID de este puntero(para arrastrar)
                     mActivePointerId = event.getPointerId(0);
@@ -322,6 +326,28 @@ public class MainActivity extends AppCompatActivity {
             //
         }
     };
+
+    void guardarBitmap(Bitmap bmpGuardado)
+    {
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        File directory = cw.getDir("watermarks", Context.MODE_PRIVATE);
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+
+        File mypath = new File(directory, "default.png");
+//        System.out.println(mypath.exists());
+
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(mypath);
+            bmpGuardado.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.close();
+            Toast.makeText(getApplicationContext(), "Watermark saved", Toast.LENGTH_SHORT);
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG);
+        }
+    }
 
     void definirImagenConUri(Uri uri) {
         try {
