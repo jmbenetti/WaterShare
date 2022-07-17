@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -135,122 +136,9 @@ public class MainActivity extends AppCompatActivity {
 
         imgPrincipal = findViewById(R.id.shareimage);
 
-        imgPrincipal.setOnTouchListener((v, event) -> {
+        imgPrincipal.setOnTouchListener(touchListenerImg);
 
-            final int action = event.getActionMasked();
-
-            //Guardo el ancho de la marca en escala de pantalla táctil
-            float f = imgPrincipal.getWidth();
-            nAnchoActualMarca = (float) (bmpMarcaElegida.getWidth() * imgPrincipal.getWidth() /
-                                bmpElegido.getWidth() * nEscala);
-            nAltoActualMarca = (float) (bmpMarcaElegida.getHeight() * imgPrincipal.getHeight()  /
-                                bmpElegido.getHeight() * nEscala);
-
-            switch (action) {
-                case MotionEvent.ACTION_DOWN: {
-                    final int pointerIndex = event.getActionIndex();
-                    final float x = event.getX(pointerIndex);
-                    final float y = event.getY(pointerIndex);
-
-
-                    if (true)
-                    //---
-                    {
-
-                        boolean bCoincideX = false;
-                        boolean bCoincideY = false;
-                        if (x >= nPosicionXMarca && x <= nPosicionXMarca + nAnchoActualMarca) {
-                            bCoincideX = true;
-//                        nDeltaToqueX = x - nPosicionXMarca;
-                        }
-                        if (y >= nPosicionYMarca && y <= nPosicionYMarca + nAltoActualMarca) {
-                            bCoincideY = true;
-//                        nDeltaToqueY = y - nPosicionYMarca;
-                        }
-                        if (bCoincideX && bCoincideY) {
-//                      if(true){
-                            bArrastrarMarca = true;
-                            mLastTouchX = x;
-                            mLastTouchY = y;
-                        } else {
-                            bArrastrarMarca = false;
-                        }
-                        // Recordar dónde empezamos(para arrastrar)
-
-                        // Guardar el ID de este puntero(para arrastrar)
-                        mActivePointerId = event.getPointerId(0);
-                    }
-                    break;
-                }
-
-                case MotionEvent.ACTION_MOVE: {
-                    if (bArrastrarMarca) {
-                        // Encontrar el índice del puntero activo para obtener su posición
-                        final int pointerIndex = event.findPointerIndex(mActivePointerId);
-
-                        final float x = event.getX(pointerIndex);
-                        final float y = event.getY(pointerIndex);
-
-                        // Calcular la distancia movida
-                        final float dx = x - mLastTouchX;
-                        final float dy = y - mLastTouchY;
-
-                        mPosX += dx;
-                        mPosY += dy;
-
-
-                        //Asigno la nueva posición a las variables de posición de marca y redibujo
-//                        nPosicionXMarca = mPosX - nDeltaToqueX;
-//                        nPosicionYMarca = mPosY - nDeltaToqueY;
-                        nPosicionXMarca = mPosX;
-                        nPosicionYMarca = mPosY;
-                        //System.out.println("Marca en : " + nPosicionXMarca + ", " + nPosicionYMarca);
-
-
-                        dibujarConMarca();
-
-
-                        // Recordar esta posición para el siguiente evento
-                        mLastTouchX = x;
-                        mLastTouchY = y;
-                    }
-
-                    break;
-                }
-
-                case MotionEvent.ACTION_UP:
-                    //lo mismo que cancel, sigue abajo
-                case MotionEvent.ACTION_CANCEL: {
-//                    nDeltaToqueX = 0;
-//                    nDeltaToqueY = 0;
-                    mActivePointerId = INVALID_POINTER_ID;
-                    bArrastrarMarca = false;
-                    break;
-                }
-
-                case MotionEvent.ACTION_POINTER_UP: {
-
-                    final int pointerIndex = event.getActionIndex();
-                    final int pointerId = event.getPointerId(pointerIndex);
-
-                    if (pointerId == mActivePointerId) {
-                        if (bArrastrarMarca) {
-                            // Este era nuestro puntero activo. Elegir uno nuevo y ajustar.
-                            final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-                            mLastTouchX = event.getX(newPointerIndex);
-                            mLastTouchY = event.getY(newPointerIndex);
-                            mActivePointerId = event.getPointerId(newPointerIndex);
-                        }
-                    }
-                    break;
-                }
-            }
-            return true;
-
-        });
-
-        if(uriExterno != null)
-        {
+        if (uriExterno != null) {
             definirImagenConUri(uriExterno);
         }
         dibujarConMarca();
@@ -331,6 +219,109 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+    private View.OnTouchListener touchListenerImg = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+
+            final int action = event.getActionMasked();
+
+            //Guardo el ancho de la marca en escala de pantalla táctil
+            float f = imgPrincipal.getWidth();
+            nAnchoActualMarca = (float) (bmpMarcaElegida.getWidth() * imgPrincipal.getWidth() /
+                    bmpElegido.getWidth() * nEscala);
+            nAltoActualMarca = (float) (bmpMarcaElegida.getHeight() * imgPrincipal.getHeight() /
+                    bmpElegido.getHeight() * nEscala);
+
+            switch (action) {
+                case MotionEvent.ACTION_DOWN: {
+                    final int pointerIndex = event.getActionIndex();
+                    final float x = event.getX(pointerIndex);
+                    final float y = event.getY(pointerIndex);
+
+
+                    boolean bCoincideX = false;
+                    boolean bCoincideY = false;
+                    if (x >= nPosicionXMarca && x <= nPosicionXMarca + nAnchoActualMarca) {
+                        bCoincideX = true;
+                    }
+                    if (y >= nPosicionYMarca && y <= nPosicionYMarca + nAltoActualMarca) {
+                        bCoincideY = true;
+                    }
+                    if (bCoincideX && bCoincideY) {
+                        bArrastrarMarca = true;
+                        mLastTouchX = x;
+                        mLastTouchY = y;
+                    } else {
+                        bArrastrarMarca = false;
+                    }
+                    // Recordar dónde empezamos(para arrastrar)
+
+                    // Guardar el ID de este puntero(para arrastrar)
+                    mActivePointerId = event.getPointerId(0);
+                    break;
+                }
+
+                case MotionEvent.ACTION_MOVE: {
+                    if (bArrastrarMarca) {
+                        // Encontrar el índice del puntero activo para obtener su posición
+                        final int pointerIndex = event.findPointerIndex(mActivePointerId);
+
+                        final float x = event.getX(pointerIndex);
+                        final float y = event.getY(pointerIndex);
+
+                        // Calcular la distancia movida
+                        final float dx = x - mLastTouchX;
+                        final float dy = y - mLastTouchY;
+
+                        mPosX += dx;
+                        mPosY += dy;
+
+                        nPosicionXMarca = mPosX;
+                        nPosicionYMarca = mPosY;
+
+                        dibujarConMarca();
+
+
+                        // Recordar esta posición para el siguiente evento
+                        mLastTouchX = x;
+                        mLastTouchY = y;
+                    }
+
+                    break;
+                }
+
+                case MotionEvent.ACTION_UP:
+                    //lo mismo que cancel, sigue abajo
+                case MotionEvent.ACTION_CANCEL: {
+                    mActivePointerId = INVALID_POINTER_ID;
+                    bArrastrarMarca = false;
+                    break;
+                }
+
+                case MotionEvent.ACTION_POINTER_UP: {
+
+                    final int pointerIndex = event.getActionIndex();
+                    final int pointerId = event.getPointerId(pointerIndex);
+
+                    if (pointerId == mActivePointerId) {
+                        if (bArrastrarMarca) {
+                            // Este era nuestro puntero activo. Elegir uno nuevo y ajustar.
+                            final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                            mLastTouchX = event.getX(newPointerIndex);
+                            mLastTouchY = event.getY(newPointerIndex);
+                            mActivePointerId = event.getPointerId(newPointerIndex);
+                        }
+                    }
+                    break;
+                }
+            }
+            return true;
+
+
+            //
+        }
+    };
 
     void definirImagenConUri(Uri uri) {
         try {
@@ -434,13 +425,11 @@ public class MainActivity extends AppCompatActivity {
             //Escalo el toque a las dimensiones de la imagen
             float nPosicionXAjustada = 0f;
             float nPosicionYAjustada = 0f;
-            if(nPosicionXMarca != 0)
-            {
+            if (nPosicionXMarca != 0) {
                 nPosicionXAjustada = nPosicionXMarca / imgPrincipal.getWidth() *
                         bmpOriginal.getWidth();
             }
-            if(nPosicionYMarca != 0)
-            {
+            if (nPosicionYMarca != 0) {
                 nPosicionYAjustada = nPosicionYMarca / imgPrincipal.getHeight() *
                         bmpOriginal.getHeight();
             }
