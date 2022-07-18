@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -144,12 +145,17 @@ public class MainActivity extends AppCompatActivity {
             definirImagenConUri(uriExterno);
         }
 
-        //Levanto la marca de agua por defecto guardada, si es que existe, y la dibujo
+        //Levanto la marca de agua por defecto guardada, si es que existe
         definirMarcaConUri(Uri.fromFile(new File("/data/user/0/com.jmbenetti.watershare/app_watermarks/default.png")));
+
+        leerDatosMarca();
+        //La dibujo
+        dibujarConMarca();
 
 
         btnSave.setOnClickListener(v -> {
-            guardarBitmap(bmpMarcaElegida);
+            guardarBitmap(bmpMarcaElegida, "watermarks", "default.png");
+            guardarDatosMarca();
         });
 
         btnCompartir.setOnClickListener(v -> {
@@ -185,6 +191,8 @@ public class MainActivity extends AppCompatActivity {
                                 && datos.getData() != null) {
                             Uri uriImagenElegida = datos.getData();
                             definirImagenConUri(uriImagenElegida);
+                            leerDatosMarca();
+                            dibujarConMarca();
                         }
                     }
                 });
@@ -201,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
                                 && datos.getData() != null) {
                             Uri uriImagenElegida = datos.getData();
                             definirMarcaConUri(uriImagenElegida);
+                            dibujarConMarca();
                         }
                     }
                 });
@@ -327,23 +336,21 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    void guardarBitmap(Bitmap bmpGuardado)
-    {
+    void guardarBitmap(Bitmap bmpGuardado, String szCarpeta, String szNombre) {
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
-        File directory = cw.getDir("watermarks", Context.MODE_PRIVATE);
+        File directory = cw.getDir(szCarpeta, Context.MODE_PRIVATE);
         if (!directory.exists()) {
             directory.mkdir();
         }
 
-        File mypath = new File(directory, "default.png");
-//        System.out.println(mypath.exists());
+        File mypath = new File(directory, szNombre);
 
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(mypath);
             bmpGuardado.compress(Bitmap.CompressFormat.PNG, 100, fos);
             fos.close();
-            Toast.makeText(getApplicationContext(), "Watermark saved", Toast.LENGTH_SHORT);
+//            Toast.makeText(getApplicationContext(), "Watermark saved", Toast.LENGTH_SHORT);
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG);
         }
@@ -361,8 +368,37 @@ public class MainActivity extends AppCompatActivity {
 
         bmpElegido = redimensionarAnchoBitmap(bmpElegido, nAnchoPredeterminado);
 
-        reiniciarPosicionMarca();
-        dibujarConMarca();
+//        calcularPosicionMarca();
+        //dibujarConMarca();
+    }
+
+    void guardarDatosMarca() {
+        // Storing data into SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences("appdata", MODE_PRIVATE);
+
+        // Creating an Editor object to edit(write to the file)
+        SharedPreferences.Editor myEdit = sharedPreferences.edit();
+
+        // Storing the key and its value as the data fetched from edittext
+        myEdit.putFloat("watermark_x", nPosicionXMarca);
+        myEdit.putFloat("watermark_y", nPosicionYMarca);
+        myEdit.putFloat("watermark_scale", (float)nEscala);
+
+        // Once the changes have been made,
+        // we need to commit to apply those changes made,
+        // otherwise, it will throw an error
+        myEdit.commit();
+
+    }
+
+    void leerDatosMarca(){
+        // Retrieving the value using its keys the file name
+        // must be same in both saving and retrieving the data
+        SharedPreferences sh = getSharedPreferences("appdata", Context.MODE_PRIVATE);
+
+        nPosicionXMarca = sh.getFloat("watermark_x", 0f);
+        nPosicionYMarca = sh.getFloat("watermark_y", 0f);
+        nEscala = (double) sh.getFloat("watermark_scale", 0f);
     }
 
     void definirMarcaConUri(Uri uri) {
@@ -375,17 +411,23 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         bmpMarcaElegida = redimensionarAnchoBitmap(bmpMarcaElegida, nAnchoPredeterminado);
-        reiniciarPosicionMarca();
-        dibujarConMarca();
+        calcularPosicionMarca();
+//        dibujarConMarca();
     }
 
-    void reiniciarPosicionMarca() {
-        nPosicionXMarca = 0;
-        nPosicionYMarca = 0;
-        mPosX = 0;
-        mPosY = 0;
+    void calcularPosicionMarca() {
+//        nPosicionXMarca = 0;
+//        nPosicionYMarca = 0;
+//        mPosX = 0;
+//        mPosY = 0;
+//        mLastTouchX = 0;
+//        mLastTouchY = 0;
+        leerDatosMarca();
+        mPosX = nPosicionXMarca;
+        mPosY = nPosicionYMarca;
         mLastTouchX = 0;
         mLastTouchY = 0;
+
     }
 
     void handleSendImage(Intent intent) {
@@ -399,6 +441,15 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void dibujarConMarca() {
+        //Levanto ancho y alto de pantalla
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int nAltoPantalla = displayMetrics.heightPixels;
+        int nAnchoPantalla = displayMetrics.widthPixels;
+
+        //
+
+
         Resources res = getResources();
         //Marca placeholder por si no hay nada seleccionado
         Drawable drawableMarca;
@@ -452,12 +503,19 @@ public class MainActivity extends AppCompatActivity {
             float nPosicionXAjustada = 0f;
             float nPosicionYAjustada = 0f;
             if (nPosicionXMarca != 0) {
-                nPosicionXAjustada = nPosicionXMarca / imgPrincipal.getWidth() *
+//                nPosicionXAjustada = nPosicionXMarca / imgPrincipal.getWidth() *
+//                        bmpOriginal.getWidth();
+
+                nPosicionXAjustada = nPosicionXMarca / nAnchoPantalla *
                         bmpOriginal.getWidth();
+                //System.out.println(imgPrincipal.getWidth());
             }
             if (nPosicionYMarca != 0) {
-                nPosicionYAjustada = nPosicionYMarca / imgPrincipal.getHeight() *
-                        bmpOriginal.getHeight();
+//                nPosicionYAjustada = nPosicionYMarca / imgPrincipal.getHeight() *
+//                        bmpOriginal.getHeight();
+                double nRelacionResolucion = nPosicionXAjustada / nPosicionXMarca;
+
+               nPosicionYAjustada = (float) (nPosicionYMarca  * nRelacionResolucion);
             }
             canvas.drawBitmap(bmpMarca, nPosicionXAjustada, nPosicionYAjustada, paint);
 
