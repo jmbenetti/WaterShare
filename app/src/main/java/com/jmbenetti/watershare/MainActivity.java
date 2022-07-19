@@ -45,10 +45,16 @@ public class MainActivity extends AppCompatActivity {
     double nMinimo = 0.1;
     double nMaximo = 10;
     double nVariacion = 0.1;
-    float nPosicionXMarca = 0;
-    float nPosicionYMarca = 0;
-    float nPosicionXPorcentaje = 0;
-    float nPosicionYPorcentaje = 0;
+//    float nPosicionXMarca = 0;
+//    float nPosicionYMarca = 0;
+//    float nPosicionXPorcentaje = 0;
+//    float nPosicionYPorcentaje = 0;
+    double nPosicionXMarca = 0;
+    double nPosicionYMarca = 0;
+    double nPosicionXPorcentaje = 0;
+    double nPosicionYPorcentaje = 0;
+
+
     boolean bLeerPosicionGuardada = false;
     Button btnAumentar;
     Button btnReducir;
@@ -59,14 +65,19 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bmpMarcaElegida;
     SeekBar seekBarTransparencia;
     int mActivePointerId = INVALID_POINTER_ID;
-    float mLastTouchX;
-    float mLastTouchY;
-    float mPosX;
-    float mPosY;
+//    float mLastTouchX;
+//    float mLastTouchY;
+    double mLastTouchX;
+    double mLastTouchY;
+//    float mPosX;
+//    float mPosY;
     int nAnchoPredeterminado = 1024;
     static int nDensidadPredeterminada = 260;
-    float nAnchoActualMarca;
-    float nAltoActualMarca;
+//    float nAnchoActualMarca;
+//    float nAltoActualMarca;
+    double nAnchoActualMarca;
+    double nAltoActualMarca;
+
     boolean bArrastrarMarca = false;
     int nOpacidadMarca = 50;
     int nDensidadPantalla;
@@ -244,18 +255,24 @@ public class MainActivity extends AppCompatActivity {
             final int action = event.getActionMasked();
 
             //Guardo el ancho de la marca en escala de pantalla táctil
-            float f = imgPrincipal.getWidth();
-            nAnchoActualMarca = (float) (bmpMarcaElegida.getWidth() * imgPrincipal.getWidth() /
+//            float f = imgPrincipal.getWidth();
+//            nAnchoActualMarca = (float) (bmpMarcaElegida.getWidth() * imgPrincipal.getWidth() /
+//                    bmpElegido.getWidth() * nEscala);
+//            nAltoActualMarca = (float) (bmpMarcaElegida.getHeight() * imgPrincipal.getHeight() /
+//                    bmpElegido.getHeight() * nEscala);
+
+            nAnchoActualMarca = (double) (bmpMarcaElegida.getWidth() * imgPrincipal.getWidth() /
                     bmpElegido.getWidth() * nEscala);
-            nAltoActualMarca = (float) (bmpMarcaElegida.getHeight() * imgPrincipal.getHeight() /
+            nAltoActualMarca = (double) (bmpMarcaElegida.getHeight() * imgPrincipal.getHeight() /
                     bmpElegido.getHeight() * nEscala);
 
             switch (action) {
                 case MotionEvent.ACTION_DOWN: {
                     final int pointerIndex = event.getActionIndex();
-                    final float x = event.getX(pointerIndex);
-                    final float y = event.getY(pointerIndex);
-
+//                    final float x = event.getX(pointerIndex);
+//                    final float y = event.getY(pointerIndex);
+                    final double x = event.getX(pointerIndex);
+                    final double y = event.getY(pointerIndex);
 
                     boolean bCoincideX = false;
                     boolean bCoincideY = false;
@@ -283,18 +300,26 @@ public class MainActivity extends AppCompatActivity {
                         // Encontrar el índice del puntero activo para obtener su posición
                         final int pointerIndex = event.findPointerIndex(mActivePointerId);
 
-                        final float x = event.getX(pointerIndex);
-                        final float y = event.getY(pointerIndex);
+//                        final float x = event.getX(pointerIndex);
+//                        final float y = event.getY(pointerIndex);
+                        final double x = event.getX(pointerIndex);
+                        final double y = event.getY(pointerIndex);
+
 
                         // Calcular la distancia movida
-                        final float dx = x - mLastTouchX;
-                        final float dy = y - mLastTouchY;
+//                        final float dx = x - mLastTouchX;
+//                        final float dy = y - mLastTouchY;
+                        final double dx = x - mLastTouchX;
+                        final double dy = y - mLastTouchY;
 
-                        mPosX += dx;
-                        mPosY += dy;
+//                        mPosX += dx;
+//                        mPosY += dy;
 
-                        nPosicionXMarca = mPosX;
-                        nPosicionYMarca = mPosY;
+//                        nPosicionXMarca = mPosX;
+//                        nPosicionYMarca = mPosY;
+
+                        nPosicionXMarca += dx;
+                        nPosicionYMarca += dy;
 
                         dibujarConMarca();
 
@@ -379,25 +404,37 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor myEdit = sharedPreferences.edit();
 
         // Guardo la posición de la marca como porcentaje de cada eje
-        float nX = nPosicionXMarca * 100 / imgPrincipal.getWidth();
-        float nY = nPosicionYMarca * 100 / imgPrincipal.getHeight();
-        myEdit.putFloat("watermark_x", nX);
-        myEdit.putFloat("watermark_y", nY);
-        myEdit.putFloat("watermark_scale", (float) nEscala);
+//        float nX = nPosicionXMarca * 100 / imgPrincipal.getWidth();
+//        float nY = nPosicionYMarca * 100 / imgPrincipal.getHeight();
+        double nX = nPosicionXMarca * 100 / imgPrincipal.getWidth();
+        double nY = nPosicionYMarca * 100 / imgPrincipal.getHeight();
+
+        myEdit.putString("watermark_x", String.valueOf(nX));
+        myEdit.putString("watermark_y", String.valueOf(nY));
+        myEdit.putString("watermark_scale", String.valueOf(nEscala));
 
         myEdit.commit();
 
     }
 
     void leerDatosMarca() {
-        SharedPreferences sh = getSharedPreferences("appdata", Context.MODE_PRIVATE);
+        try {
+            SharedPreferences sh = getSharedPreferences("appdata", Context.MODE_PRIVATE);
 
-//        nPosicionXMarca = sh.getFloat("watermark_x", 0f);
-//        nPosicionYMarca = sh.getFloat("watermark_y", 0f);
-        nPosicionXPorcentaje = sh.getFloat("watermark_x", 0f);
-        nPosicionYPorcentaje = sh.getFloat("watermark_y", 0f);
-        nEscala = (double) sh.getFloat("watermark_scale", 0f);
-        bLeerPosicionGuardada = true;
+//        nPosicionXPorcentaje = sh.getFloat("watermark_x", 0f);
+//        nPosicionYPorcentaje = sh.getFloat("watermark_y", 0f);
+//        nEscala = (double) sh.getFloat("watermark_scale", 0f);
+            nPosicionXPorcentaje = Double.parseDouble(sh.getString("watermark_x", "0"));
+            nPosicionYPorcentaje = Double.parseDouble(sh.getString("watermark_y", "0"));
+            nEscala = Double.parseDouble(sh.getString("watermark_scale", "0"));
+
+            bLeerPosicionGuardada = true;
+        }
+        catch(Exception e)
+        {
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG);
+        }
+
     }
 
     void definirMarcaConUri(Uri uri) {
@@ -498,17 +535,19 @@ public class MainActivity extends AppCompatActivity {
 
         if (bmpMarca != null) {
             //Escalo el toque a las dimensiones de la imagen
-            float nPosicionXAjustada = 0f;
-            float nPosicionYAjustada = 0f;
+//            float nPosicionXAjustada = 0f;
+//            float nPosicionYAjustada = 0f;
+            double nPosicionXAjustada = 0;
+            double nPosicionYAjustada = 0;
             if (nPosicionXMarca != 0 | bLeerPosicionGuardada) {
 //                nPosicionXAjustada = nPosicionXMarca / imgPrincipal.getWidth() *
 //                        bmpOriginal.getWidth();
 
                 //Si leí la marca desde los datos guardados, la levanto como porcentaje
                 if (bLeerPosicionGuardada) {
-                    nPosicionXAjustada = nPosicionXPorcentaje / 100 * bmpOriginal.getWidth();
+                    nPosicionXAjustada = nPosicionXPorcentaje * bmpOriginal.getWidth() / 100;
                     nPosicionXMarca = nPosicionXAjustada * nAnchoPantalla / bmpOriginal.getWidth();
-                    mPosX = nPosicionXMarca;
+//                    mPosX = nPosicionXMarca;
                     //mLastTouchX = nPosicionXMarca;
                 } else {
                     nPosicionXAjustada = nPosicionXMarca / nAnchoPantalla *
@@ -524,22 +563,24 @@ public class MainActivity extends AppCompatActivity {
                 //Si leí la marca desde los datos guardados, la levanto como porcentaje
                 if (bLeerPosicionGuardada) {
 //                    double nRelacionAjuste = nPosicionXAjustada / nPosicionXMarca;
-                    nPosicionYAjustada = nPosicionYPorcentaje / 100 * bmpOriginal.getHeight();
+                    nPosicionYAjustada = nPosicionYPorcentaje * bmpOriginal.getHeight() / 100;
                     double nRelacionXY = nPosicionYAjustada / nPosicionXAjustada;
-//                    nPosicionYMarca = (float) (nPosicionYAjustada * nRelacionAjuste);
-//                    nPosicionYMarca = (float) (nPosicionXMarca * nRelacionXY);
-                    nPosicionYMarca = (float)(nPosicionXMarca * nRelacionXY);
-                    mPosY = nPosicionYMarca;
+
+
+//                    nPosicionYMarca = (float)(nPosicionXMarca * nRelacionXY);
+                    nPosicionYMarca = nPosicionXMarca * nRelacionXY;
+//                    mPosY = nPosicionYMarca;
                     //mLastTouchY = nPosicionYMarca;
                 } else {
 
                     double nRelacionResolucion = nPosicionXAjustada / nPosicionXMarca;
-                    nPosicionYAjustada = (float) (nPosicionYMarca * nRelacionResolucion);
+//                    nPosicionYAjustada = (float) (nPosicionYMarca * nRelacionResolucion);
+                    nPosicionYAjustada = nPosicionYMarca * nRelacionResolucion;
                 }
             } else {
                 nPosicionYAjustada = 0;
             }
-            canvas.drawBitmap(bmpMarca, nPosicionXAjustada, nPosicionYAjustada, paint);
+            canvas.drawBitmap(bmpMarca, (float)nPosicionXAjustada, (float)nPosicionYAjustada, paint);
             if(bLeerPosicionGuardada)
             {
 //                nPosicionXMarca = nPosicionXAjustada * nAnchoPantalla / bmpOriginal.getWidth();
@@ -596,12 +637,14 @@ public class MainActivity extends AppCompatActivity {
         int width = bm.getWidth();
         int height = bm.getHeight();
         Bitmap bmpResultado;
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
+//        float scaleWidth = ((float) newWidth) / width;
+//        float scaleHeight = ((float) newHeight) / height;
+        double scaleWidth = ((double) newWidth) / width;
+        double scaleHeight = ((double) newHeight) / height;
         // Crear matrix para manipulación
         Matrix matrix = new Matrix();
         // Cambiar tamaño de bitmap
-        matrix.postScale(scaleWidth, scaleHeight);
+        matrix.postScale((float)scaleWidth, (float)scaleHeight);
         // Recrear el bitmap
         bmpResultado = Bitmap.createBitmap(
                 bm, 0, 0, width, height, matrix, false);
