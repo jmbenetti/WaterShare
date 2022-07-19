@@ -47,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
     double nVariacion = 0.1;
     float nPosicionXMarca = 0;
     float nPosicionYMarca = 0;
+    float nPosicionXPorcentaje = 0;
+    float nPosicionYPorcentaje = 0;
+    boolean bLeerPosicionGuardada = false;
     Button btnAumentar;
     Button btnReducir;
     Button btnImagen;
@@ -368,37 +371,33 @@ public class MainActivity extends AppCompatActivity {
 
         bmpElegido = redimensionarAnchoBitmap(bmpElegido, nAnchoPredeterminado);
 
-//        calcularPosicionMarca();
-        //dibujarConMarca();
     }
 
     void guardarDatosMarca() {
-        // Storing data into SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("appdata", MODE_PRIVATE);
 
-        // Creating an Editor object to edit(write to the file)
         SharedPreferences.Editor myEdit = sharedPreferences.edit();
 
-        // Storing the key and its value as the data fetched from edittext
-        myEdit.putFloat("watermark_x", nPosicionXMarca);
-        myEdit.putFloat("watermark_y", nPosicionYMarca);
-        myEdit.putFloat("watermark_scale", (float)nEscala);
+        // Guardo la posición de la marca como porcentaje de cada eje
+        float nX = nPosicionXMarca * 100 / imgPrincipal.getWidth();
+        float nY = nPosicionYMarca * 100 / imgPrincipal.getHeight();
+        myEdit.putFloat("watermark_x", nX);
+        myEdit.putFloat("watermark_y", nY);
+        myEdit.putFloat("watermark_scale", (float) nEscala);
 
-        // Once the changes have been made,
-        // we need to commit to apply those changes made,
-        // otherwise, it will throw an error
         myEdit.commit();
 
     }
 
-    void leerDatosMarca(){
-        // Retrieving the value using its keys the file name
-        // must be same in both saving and retrieving the data
+    void leerDatosMarca() {
         SharedPreferences sh = getSharedPreferences("appdata", Context.MODE_PRIVATE);
 
-        nPosicionXMarca = sh.getFloat("watermark_x", 0f);
-        nPosicionYMarca = sh.getFloat("watermark_y", 0f);
+//        nPosicionXMarca = sh.getFloat("watermark_x", 0f);
+//        nPosicionYMarca = sh.getFloat("watermark_y", 0f);
+        nPosicionXPorcentaje = sh.getFloat("watermark_x", 0f);
+        nPosicionYPorcentaje = sh.getFloat("watermark_y", 0f);
         nEscala = (double) sh.getFloat("watermark_scale", 0f);
+        bLeerPosicionGuardada = true;
     }
 
     void definirMarcaConUri(Uri uri) {
@@ -412,7 +411,6 @@ public class MainActivity extends AppCompatActivity {
         }
         bmpMarcaElegida = redimensionarAnchoBitmap(bmpMarcaElegida, nAnchoPredeterminado);
         calcularPosicionMarca();
-//        dibujarConMarca();
     }
 
     void calcularPosicionMarca() {
@@ -423,10 +421,10 @@ public class MainActivity extends AppCompatActivity {
 //        mLastTouchX = 0;
 //        mLastTouchY = 0;
         leerDatosMarca();
-        mPosX = nPosicionXMarca;
-        mPosY = nPosicionYMarca;
-        mLastTouchX = 0;
-        mLastTouchY = 0;
+//        mPosX = nPosicionXMarca;
+//        mPosY = nPosicionYMarca;
+//        mLastTouchX = 0;
+//        mLastTouchY = 0;
 
     }
 
@@ -502,26 +500,56 @@ public class MainActivity extends AppCompatActivity {
             //Escalo el toque a las dimensiones de la imagen
             float nPosicionXAjustada = 0f;
             float nPosicionYAjustada = 0f;
-            if (nPosicionXMarca != 0) {
+            if (nPosicionXMarca != 0 | bLeerPosicionGuardada) {
 //                nPosicionXAjustada = nPosicionXMarca / imgPrincipal.getWidth() *
 //                        bmpOriginal.getWidth();
 
-                nPosicionXAjustada = nPosicionXMarca / nAnchoPantalla *
-                        bmpOriginal.getWidth();
-                //System.out.println(imgPrincipal.getWidth());
+                //Si leí la marca desde los datos guardados, la levanto como porcentaje
+                if (bLeerPosicionGuardada) {
+                    nPosicionXAjustada = nPosicionXPorcentaje / 100 * bmpOriginal.getWidth();
+                    nPosicionXMarca = nPosicionXAjustada * nAnchoPantalla / bmpOriginal.getWidth();
+                    mPosX = nPosicionXMarca;
+                    //mLastTouchX = nPosicionXMarca;
+                } else {
+                    nPosicionXAjustada = nPosicionXMarca / nAnchoPantalla *
+                            bmpOriginal.getWidth();
+                }
+            } else {
+                nPosicionXAjustada = 0;
             }
-            if (nPosicionYMarca != 0) {
+            if (nPosicionYMarca != 0 | bLeerPosicionGuardada) {
 //                nPosicionYAjustada = nPosicionYMarca / imgPrincipal.getHeight() *
 //                        bmpOriginal.getHeight();
-                double nRelacionResolucion = nPosicionXAjustada / nPosicionXMarca;
 
-               nPosicionYAjustada = (float) (nPosicionYMarca  * nRelacionResolucion);
+                //Si leí la marca desde los datos guardados, la levanto como porcentaje
+                if (bLeerPosicionGuardada) {
+//                    double nRelacionAjuste = nPosicionXAjustada / nPosicionXMarca;
+                    nPosicionYAjustada = nPosicionYPorcentaje / 100 * bmpOriginal.getHeight();
+                    double nRelacionXY = nPosicionYAjustada / nPosicionXAjustada;
+//                    nPosicionYMarca = (float) (nPosicionYAjustada * nRelacionAjuste);
+//                    nPosicionYMarca = (float) (nPosicionXMarca * nRelacionXY);
+                    nPosicionYMarca = (float)(nPosicionXMarca * nRelacionXY);
+                    mPosY = nPosicionYMarca;
+                    //mLastTouchY = nPosicionYMarca;
+                } else {
+
+                    double nRelacionResolucion = nPosicionXAjustada / nPosicionXMarca;
+                    nPosicionYAjustada = (float) (nPosicionYMarca * nRelacionResolucion);
+                }
+            } else {
+                nPosicionYAjustada = 0;
             }
             canvas.drawBitmap(bmpMarca, nPosicionXAjustada, nPosicionYAjustada, paint);
+            if(bLeerPosicionGuardada)
+            {
+//                nPosicionXMarca = nPosicionXAjustada * nAnchoPantalla / bmpOriginal.getWidth();
+//                nPosicionYMarca = nPosicionYAjustada * nAltoPantalla / bmpOriginal.getHeight();
+                bLeerPosicionGuardada = false;
+            }
 
         }
         imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), bmpOriginal));
-
+        System.out.println(imgPrincipal.getHeight());
     }
 
     private void compartirImagenConTexto(Bitmap bitmap) {
