@@ -19,8 +19,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -36,11 +38,12 @@ import androidx.core.content.res.ResourcesCompat;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import com.jmbenetti.watershare.CustomImageView;
 
 public class MainActivity extends AppCompatActivity {
     //
     Button btnCompartir;
-    ImageView imgPrincipal;
+    CustomImageView imgPrincipal;
     double nEscala = .5;
     double nMinimo = 0.1;
     double nMaximo = 10;
@@ -82,8 +85,9 @@ public class MainActivity extends AppCompatActivity {
     int nOpacidadMarca = 50;
     int nDensidadPantalla;
     Uri uriExterno;
-//    float nDeltaToqueX;
-//    float nDeltaToqueY;
+    float nAnchoDibujado;
+    float nAltoDibujado;
+    boolean bPreparandoImagen;
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -106,7 +110,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         nDensidadPantalla = (int) (metrics.density * 160f);
-//        Toast.makeText(getApplicationContext(), densidadPantalla, Toast.LENGTH_LONG);
         setContentView(R.layout.activity_main);
 
 
@@ -144,16 +147,35 @@ public class MainActivity extends AppCompatActivity {
                 // TODO Auto-generated method stub
 
                 nOpacidadMarca = progress;
-                System.out.println(nOpacidadMarca);
                 dibujarConMarca();
 
             }
         });
 
 
-        imgPrincipal = findViewById(R.id.shareimage);
+        imgPrincipal = (CustomImageView) findViewById(R.id.shareimage);
 
         imgPrincipal.setOnTouchListener(touchListenerImg);
+
+        imgPrincipal.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                //imgPrincipal.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                float imageViewSurfaceWidth = imgPrincipal.getWidth();
+                float imageViewSurfaceHeight = imgPrincipal.getHeight();
+                nAnchoDibujado = imageViewSurfaceWidth;
+                nAltoDibujado = imageViewSurfaceHeight;
+                Log.i("prueba", "width = "+imageViewSurfaceWidth+", height = "+imageViewSurfaceHeight);
+//                Toast.makeText(getApplicationContext(), "width = "+imageViewSurfaceWidth+", height = "+imageViewSurfaceHeight,
+//                        Toast.LENGTH_LONG).show();
+                //Si recién estoy cargando la imagen, cargo la marca de agua desde acá
+                if(bPreparandoImagen) {
+                    dibujarConMarca();
+                    bPreparandoImagen = false;
+                }
+            }
+        });
+
 
         if (uriExterno != null) {
             definirImagenConUri(uriExterno);
@@ -164,7 +186,9 @@ public class MainActivity extends AppCompatActivity {
 
         leerDatosMarca();
         //La dibujo
-        dibujarConMarca();
+        limpiarImageView();
+        prepararImageView();
+        //dibujarConMarca();
 
 
         btnSave.setOnClickListener(v -> {
@@ -206,7 +230,9 @@ public class MainActivity extends AppCompatActivity {
                             Uri uriImagenElegida = datos.getData();
                             definirImagenConUri(uriImagenElegida);
                             leerDatosMarca();
-                            dibujarConMarca();
+                            limpiarImageView();
+                            prepararImageView();
+                            //dibujarConMarca();
                         }
                     }
                 });
@@ -238,13 +264,42 @@ public class MainActivity extends AppCompatActivity {
 
 
         btnMarca.setOnClickListener(v -> {
-            //Toast.makeText(getApplicationContext(), "Cambiar marca", Toast.LENGTH_SHORT).show();
             Intent miIntent = new Intent();
             miIntent.setType("image/*");
             miIntent.setAction(Intent.ACTION_GET_CONTENT);
 
             actCargarMarca.launch(miIntent);
         });
+
+    }
+
+    private void limpiarImageView()
+    {
+        imgPrincipal.setImageDrawable(null);
+    }
+
+    private void prepararImageView()
+    {
+
+        Resources res = getResources();
+        Drawable drawablePlaceHolder;
+
+        Bitmap bmpOriginal = null;
+        if (bmpElegido == null) {
+            drawablePlaceHolder = ResourcesCompat.getDrawable(res, R.drawable.placeholderimagen, null);
+            if (drawablePlaceHolder != null) {
+                bmpOriginal = ((BitmapDrawable) drawablePlaceHolder).getBitmap();
+                bmpOriginal = redimensionarAnchoBitmap(bmpOriginal, nAnchoPredeterminado);
+                //Guardo la imagen predeterminada como elegida para procesar afuera
+                bmpElegido = bmpOriginal.copy(Bitmap.Config.ARGB_8888, true);
+            }
+        } else {
+            bmpOriginal = bmpElegido.copy(Bitmap.Config.ARGB_8888, true);
+        }
+
+        //Pongo la imagen como está para que se me actualice alto y ancho de imageview
+        imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), bmpOriginal));
+        bPreparandoImagen = true;
 
     }
 
@@ -378,9 +433,8 @@ public class MainActivity extends AppCompatActivity {
             fos = new FileOutputStream(mypath);
             bmpGuardado.compress(Bitmap.CompressFormat.PNG, 100, fos);
             fos.close();
-//            Toast.makeText(getApplicationContext(), "Watermark saved", Toast.LENGTH_SHORT);
         } catch (Exception e) {
-            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG);
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -469,14 +523,15 @@ public class MainActivity extends AppCompatActivity {
 //        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         uriExterno = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (uriExterno != null) {
-            //Toast.makeText(this, imageUri.toString(), Toast.LENGTH_LONG).show();
-            //definirImagenConUri(imageUri);
         }
     }
 
 
     private void dibujarConMarca() {
         //Levanto ancho y alto de pantalla
+
+//        System.out.println(imgPrincipal.getWidth() + ", " + imgPrincipal.getHeight());
+
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         int nAltoPantalla = displayMetrics.heightPixels;
@@ -503,6 +558,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             bmpOriginal = bmpElegido.copy(Bitmap.Config.ARGB_8888, true);
         }
+
+        //Pongo la imagen como está para que se me actualice alto y ancho de imageview
+        imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), bmpOriginal));
+//        Toast.makeText(getApplicationContext(),imgPrincipal.getAnchoReal() + ", " + imgPrincipal.getAltoReal(), Toast.LENGTH_LONG).show();
+        //----
 
         // Convierto el Bitmap elegido en mutable
         //if (bmpOriginal != null) bmpOriginal.copy(Bitmap.Config.ARGB_8888, true);
@@ -546,11 +606,15 @@ public class MainActivity extends AppCompatActivity {
                 //Si leí la marca desde los datos guardados, la levanto como porcentaje
                 if (bLeerPosicionGuardada) {
                     nPosicionXAjustada = nPosicionXPorcentaje * bmpOriginal.getWidth() / 100;
-                    nPosicionXMarca = nPosicionXAjustada * nAnchoPantalla / bmpOriginal.getWidth();
+//                    nPosicionXMarca = nPosicionXAjustada * nAnchoPantalla / bmpOriginal.getWidth();
+                    nPosicionXMarca = nPosicionXAjustada * nAnchoDibujado / bmpOriginal.getWidth();
+
 //                    mPosX = nPosicionXMarca;
                     //mLastTouchX = nPosicionXMarca;
                 } else {
-                    nPosicionXAjustada = nPosicionXMarca / nAnchoPantalla *
+//                    nPosicionXAjustada = nPosicionXMarca / nAnchoPantalla *
+//                            bmpOriginal.getWidth();
+                    nPosicionXAjustada = nPosicionXMarca / nAnchoDibujado *
                             bmpOriginal.getWidth();
                 }
             } else {
@@ -566,16 +630,15 @@ public class MainActivity extends AppCompatActivity {
                     nPosicionYAjustada = nPosicionYPorcentaje * bmpOriginal.getHeight() / 100;
                     double nRelacionXY = nPosicionYAjustada / nPosicionXAjustada;
 
+                    //nPosicionYMarca = nPosicionXMarca * nRelacionXY;
+                    nPosicionYMarca = nPosicionYAjustada * nAltoDibujado / bmpOriginal.getHeight();
 
-//                    nPosicionYMarca = (float)(nPosicionXMarca * nRelacionXY);
-                    nPosicionYMarca = nPosicionXMarca * nRelacionXY;
-//                    mPosY = nPosicionYMarca;
-                    //mLastTouchY = nPosicionYMarca;
                 } else {
 
-                    double nRelacionResolucion = nPosicionXAjustada / nPosicionXMarca;
-//                    nPosicionYAjustada = (float) (nPosicionYMarca * nRelacionResolucion);
-                    nPosicionYAjustada = nPosicionYMarca * nRelacionResolucion;
+//                    double nRelacionResolucion = nPosicionXAjustada / nPosicionXMarca;
+//                    nPosicionYAjustada = nPosicionYMarca * nRelacionResolucion;
+                    nPosicionYAjustada = nPosicionYMarca / nAltoDibujado *
+                            bmpOriginal.getHeight();
                 }
             } else {
                 nPosicionYAjustada = 0;
@@ -583,14 +646,12 @@ public class MainActivity extends AppCompatActivity {
             canvas.drawBitmap(bmpMarca, (float)nPosicionXAjustada, (float)nPosicionYAjustada, paint);
             if(bLeerPosicionGuardada)
             {
-//                nPosicionXMarca = nPosicionXAjustada * nAnchoPantalla / bmpOriginal.getWidth();
-//                nPosicionYMarca = nPosicionYAjustada * nAltoPantalla / bmpOriginal.getHeight();
                 bLeerPosicionGuardada = false;
             }
 
         }
         imgPrincipal.setImageDrawable(new BitmapDrawable(getResources(), bmpOriginal));
-        System.out.println(imgPrincipal.getHeight());
+        //System.out.println(imgPrincipal.getHeight());
     }
 
     private void compartirImagenConTexto(Bitmap bitmap) {
@@ -637,8 +698,6 @@ public class MainActivity extends AppCompatActivity {
         int width = bm.getWidth();
         int height = bm.getHeight();
         Bitmap bmpResultado;
-//        float scaleWidth = ((float) newWidth) / width;
-//        float scaleHeight = ((float) newHeight) / height;
         double scaleWidth = ((double) newWidth) / width;
         double scaleHeight = ((double) newHeight) / height;
         // Crear matrix para manipulación
