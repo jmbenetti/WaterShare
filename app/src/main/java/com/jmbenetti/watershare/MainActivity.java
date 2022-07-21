@@ -38,12 +38,12 @@ import androidx.core.content.res.ResourcesCompat;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import com.jmbenetti.watershare.CustomImageView;
+//import com.jmbenetti.watershare.CustomImageView;
 
 public class MainActivity extends AppCompatActivity {
     //
     Button btnCompartir;
-    CustomImageView imgPrincipal;
+    ImageView imgPrincipal;
     double nEscala = .5;
     double nMinimo = 0.1;
     double nMaximo = 10;
@@ -82,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
     double nAltoActualMarca;
 
     boolean bArrastrarMarca = false;
-    int nOpacidadMarca = 50;
+    int nOpacidadPredeterminada = 50;
+    int nOpacidadMarca;
     int nDensidadPantalla;
     Uri uriExterno;
     float nAnchoDibujado;
@@ -93,24 +94,37 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
         //Recibo imagen compartida por sistema
         // Get intent, action and MIME type
 
         // Get intent, action and MIME type
-        Intent intent = getIntent();
-        String accion = intent.getAction();
-        String type = intent.getType();
+//        Intent intent = getIntent();
+//        String accion = intent.getAction();
+//        String type = intent.getType();
 
-        if (Intent.ACTION_SEND.equals(accion) && type != null) {
-            if (type.startsWith("image/")) {
-                handleSendImage(intent); // Handle single image being sent
-            }
+        //Toast.makeText(getApplicationContext(), accion + ", " + type, Toast.LENGTH_LONG).show();
+
+        //-----
+
+        if(ActivityEdit.szUriRecibida != "") {
+            //Toast.makeText(getApplicationContext(), ActivityEdit.szUriRecibida, Toast.LENGTH_SHORT).show();
+            recibirImagenEnviada(ActivityEdit.szUriRecibida);
         }
+
+        //----
+//        if (Intent.ACTION_SEND.equals(accion) && type != null) {
+//            //            if (type.startsWith("image/")) {
+//              if(type.startsWith("text/")) {
+//                recibirImagenEnviada(intent); // Handle single image being sent
+//            }
+//        }
         //---Fin de recibir imagen
-        super.onCreate(savedInstanceState);
+
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         nDensidadPantalla = (int) (metrics.density * 160f);
-        setContentView(R.layout.activity_main);
+
 
 
         ActionBar actionBar = getSupportActionBar();
@@ -118,6 +132,8 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setDisplayShowHomeEnabled(true);
             actionBar.setIcon(R.mipmap.ic_launcher_round);
         }
+
+        nOpacidadMarca = nOpacidadPredeterminada;
 
         btnCompartir = findViewById(R.id.btnShare);
         btnAumentar = findViewById(R.id.btnAumentar);
@@ -153,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        imgPrincipal = (CustomImageView) findViewById(R.id.shareimage);
+        imgPrincipal = findViewById(R.id.shareimage);
 
         imgPrincipal.setOnTouchListener(touchListenerImg);
 
@@ -466,6 +482,7 @@ public class MainActivity extends AppCompatActivity {
         myEdit.putString("watermark_x", String.valueOf(nX));
         myEdit.putString("watermark_y", String.valueOf(nY));
         myEdit.putString("watermark_scale", String.valueOf(nEscala));
+        myEdit.putString("watermark_opacity", String.valueOf(nOpacidadMarca));
 
         myEdit.commit();
 
@@ -481,6 +498,8 @@ public class MainActivity extends AppCompatActivity {
             nPosicionXPorcentaje = Double.parseDouble(sh.getString("watermark_x", "0"));
             nPosicionYPorcentaje = Double.parseDouble(sh.getString("watermark_y", "0"));
             nEscala = Double.parseDouble(sh.getString("watermark_scale", "0"));
+            nOpacidadMarca = Integer.parseInt(sh.getString("watermark_opacity", "0"));
+            seekBarTransparencia.setProgress(nOpacidadMarca);
 
             bLeerPosicionGuardada = true;
         }
@@ -519,11 +538,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    void handleSendImage(Intent intent) {
-//        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-        uriExterno = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-        if (uriExterno != null) {
-        }
+//    void recibirImagenEnviada(Intent intent) {
+        void recibirImagenEnviada(String szImagen) {
+        //String szImagen = intent.getStringExtra("uriImagen");
+        uriExterno = Uri.parse(szImagen);
+        //uriExterno = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        //Toast.makeText(getApplicationContext(), "Imagen desde segunda activity!", Toast.LENGTH_LONG).show();
+
     }
 
 
