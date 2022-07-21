@@ -370,34 +370,37 @@ public class MainActivity extends AppCompatActivity {
                     if (bArrastrarMarca) {
                         // Encontrar el índice del puntero activo para obtener su posición
                         final int pointerIndex = event.findPointerIndex(mActivePointerId);
-
-//                        final float x = event.getX(pointerIndex);
-//                        final float y = event.getY(pointerIndex);
                         final double x = event.getX(pointerIndex);
                         final double y = event.getY(pointerIndex);
 
 
                         // Calcular la distancia movida
-//                        final float dx = x - mLastTouchX;
-//                        final float dy = y - mLastTouchY;
                         final double dx = x - mLastTouchX;
                         final double dy = y - mLastTouchY;
 
-//                        mPosX += dx;
-//                        mPosY += dy;
+                        //Reviso que esté dentro de los límites del imageview para mover
+                        boolean bMoverHorizontal =
+                                nPosicionXMarca + dx > 0 - nAnchoActualMarca / 2 && nPosicionXMarca +dx <= imgPrincipal.getWidth() - nAnchoActualMarca /3;
+                        boolean bMoverVertical =
+                                nPosicionYMarca + dy > 0 - nAltoActualMarca / 2 && nPosicionYMarca +dy <= imgPrincipal.getHeight() - nAltoActualMarca /3;
+//                                y > nAltoActualMarca / 2 && y <= imgPrincipal.getHeight() - nAltoActualMarca /3;
 
-//                        nPosicionXMarca = mPosX;
-//                        nPosicionYMarca = mPosY;
+                        if(bMoverHorizontal) {
+                            nPosicionXMarca += dx;
+                            mLastTouchX = x;
+                        }
+                        if(bMoverVertical) {
+                            nPosicionYMarca += dy;
+                            mLastTouchY = y;
+                        }
 
-                        nPosicionXMarca += dx;
-                        nPosicionYMarca += dy;
-
-                        dibujarConMarca();
+                            dibujarConMarca();
 
 
-                        // Recordar esta posición para el siguiente evento
-                        mLastTouchX = x;
-                        mLastTouchY = y;
+                            // Recordar esta posición para el siguiente evento
+
+
+
                     }
 
                     break;
