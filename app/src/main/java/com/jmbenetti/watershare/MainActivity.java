@@ -210,7 +210,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //Levanto la marca de agua por defecto guardada, si es que existe
-        definirMarcaConUri(Uri.fromFile(new File("/data/user/0/com.jmbenetti.watershare/app_watermarks/default.png")));
+        try {
+            ContextWrapper cw = new ContextWrapper(getApplicationContext());
+            File directory = cw.getDir("watermarks", Context.MODE_PRIVATE);
+            File mypath = new File(directory, "default.png");
+            definirMarcaConUri(Uri.fromFile(mypath));
+//            definirMarcaConUri(Uri.fromFile(new File("/data/user/0/com.jmbenetti.watershare/app_watermarks/default.png")));
+        }
+        catch(Exception e)
+        {
+            //No hay marca guardada
+        }
 
         leerDatosMarca();
         //La dibujo
@@ -511,10 +521,10 @@ public class MainActivity extends AppCompatActivity {
 //        nPosicionXPorcentaje = sh.getFloat("watermark_x", 0f);
 //        nPosicionYPorcentaje = sh.getFloat("watermark_y", 0f);
 //        nEscala = (double) sh.getFloat("watermark_scale", 0f);
-            nPosicionXPorcentaje = Double.parseDouble(sh.getString("watermark_x", "0"));
-            nPosicionYPorcentaje = Double.parseDouble(sh.getString("watermark_y", "0"));
-            nEscala = Double.parseDouble(sh.getString("watermark_scale", "0"));
-            nOpacidadMarca = Integer.parseInt(sh.getString("watermark_opacity", "0"));
+            nPosicionXPorcentaje = Double.parseDouble(sh.getString("watermark_x", "50"));
+            nPosicionYPorcentaje = Double.parseDouble(sh.getString("watermark_y", "50"));
+            nEscala = Double.parseDouble(sh.getString("watermark_scale", "0.5"));
+            nOpacidadMarca = Integer.parseInt(sh.getString("watermark_opacity", "125"));
             seekBarTransparencia.setProgress(nOpacidadMarca);
 
             bLeerPosicionGuardada = true;
