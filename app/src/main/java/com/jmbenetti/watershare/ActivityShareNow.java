@@ -1,51 +1,51 @@
 package com.jmbenetti.watershare;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.view.View;
-
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.jmbenetti.watershare.databinding.ActivityShareNowBinding;
-
 public class ActivityShareNow extends AppCompatActivity {
+    public static String szUriRecibida = "";
+    public static Activity instancia;
 
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityShareNowBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_share_now);
 
-        binding = ActivityShareNowBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        instancia = this;
 
-        setSupportActionBar(binding.toolbar);
+        // Get intent, action and MIME type
+        Intent intent = getIntent();
+        String accion = intent.getAction();
+        String type = intent.getType();
+        boolean bDobleCompartido = intent.getBooleanExtra("watershare", false);
 
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_activity_share_now);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        if (bDobleCompartido) {
+//            szUriRecibida = "";
+            Toast.makeText(getApplicationContext(),
+                    "You have already watermarked this. Now choose another app to share with.", Toast.LENGTH_LONG).show();
+//            finishAndRemoveTask();
+        }
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+        if (Intent.ACTION_SEND.equals(accion) && type != null) {
+            if (type.startsWith("image/")) {
+                Intent intentMain = new Intent(this, MainActivity.class);
+                intentMain.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//                if (!bDobleCompartido) {
+                    Uri uriImagen = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                    this.szUriRecibida = uriImagen.toString();
+//                }
+                startActivity(intentMain);
+                if(bDobleCompartido) finishAndRemoveTask();
             }
-        });
+        }
     }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_activity_share_now);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
-    }
+
 }

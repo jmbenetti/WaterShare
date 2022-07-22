@@ -3,75 +3,43 @@ package com.jmbenetti.watershare;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.view.View;
 import android.widget.Toast;
 
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.jmbenetti.watershare.databinding.ActivityEditBinding;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class ActivityEdit extends AppCompatActivity {
     public static String szUriRecibida = "";
 
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityEditBinding binding;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //Recibo imagen compartida por sistema
-        // Get intent, action and MIME type
+        setContentView(R.layout.activity_edit);
 
         // Get intent, action and MIME type
         Intent intent = getIntent();
         String accion = intent.getAction();
         String type = intent.getType();
+        boolean bDobleCompartido = intent.getBooleanExtra("watershare", false);
+
+        if (bDobleCompartido) {
+//            szUriRecibida = "";
+            Toast.makeText(getApplicationContext(),
+                    "You have already watermarked this. Now choose another app to share with.", Toast.LENGTH_LONG).show();
+        }
 
         if (Intent.ACTION_SEND.equals(accion) && type != null) {
             if (type.startsWith("image/")) {
-                //handleSendImage(intent); // Handle single image being sent
-                //Toast.makeText(getApplicationContext(), "Recibida!", Toast.LENGTH_LONG).show();
                 Intent intentMain = new Intent(this, MainActivity.class);
-                Uri uriImagen = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                //intentMain.putExtra("resId", R.drawable.image);
-                //intent.putExtra("groupName", "Hello Anna");
-                this.szUriRecibida = uriImagen.toString();
+                intentMain.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//                if (!bDobleCompartido) {
+                    Uri uriImagen = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                    this.szUriRecibida = uriImagen.toString();
+//                }
                 startActivity(intentMain);
+                if(bDobleCompartido) finishAndRemoveTask();
             }
         }
-        //---Fin de recibir imagen
-
-
-        binding = ActivityEditBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        setSupportActionBar(binding.toolbar);
-
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_activity_edit);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
     }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_activity_edit);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
-    }
+
 }

@@ -17,6 +17,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -48,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     double nMinimo = 0.1;
     double nMaximo = 10;
     double nVariacion = 0.1;
-//    float nPosicionXMarca = 0;
+    //    float nPosicionXMarca = 0;
 //    float nPosicionYMarca = 0;
 //    float nPosicionXPorcentaje = 0;
 //    float nPosicionYPorcentaje = 0;
@@ -68,15 +70,15 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bmpMarcaElegida;
     SeekBar seekBarTransparencia;
     int mActivePointerId = INVALID_POINTER_ID;
-//    float mLastTouchX;
+    //    float mLastTouchX;
 //    float mLastTouchY;
     double mLastTouchX;
     double mLastTouchY;
-//    float mPosX;
+    //    float mPosX;
 //    float mPosY;
     int nAnchoPredeterminado = 1024;
     static int nDensidadPredeterminada = 260;
-//    float nAnchoActualMarca;
+    //    float nAnchoActualMarca;
 //    float nAltoActualMarca;
     double nAnchoActualMarca;
     double nAltoActualMarca;
@@ -89,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     float nAnchoDibujado;
     float nAltoDibujado;
     boolean bPreparandoImagen;
+    boolean bDirectShare;
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -108,10 +111,15 @@ public class MainActivity extends AppCompatActivity {
 
         //-----
 
-        if(ActivityEdit.szUriRecibida != "") {
-            //Toast.makeText(getApplicationContext(), ActivityEdit.szUriRecibida, Toast.LENGTH_SHORT).show();
+        if (ActivityEdit.szUriRecibida != "") {
             recibirImagenEnviada(ActivityEdit.szUriRecibida);
         }
+
+        if (ActivityShareNow.szUriRecibida != "") {
+            recibirImagenEnviada(ActivityShareNow.szUriRecibida);
+            bDirectShare = true;
+        }
+
 
         //----
 //        if (Intent.ACTION_SEND.equals(accion) && type != null) {
@@ -124,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
 
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         nDensidadPantalla = (int) (metrics.density * 160f);
-
 
 
         ActionBar actionBar = getSupportActionBar();
@@ -181,13 +188,18 @@ public class MainActivity extends AppCompatActivity {
                 float imageViewSurfaceHeight = imgPrincipal.getHeight();
                 nAnchoDibujado = imageViewSurfaceWidth;
                 nAltoDibujado = imageViewSurfaceHeight;
-                Log.i("prueba", "width = "+imageViewSurfaceWidth+", height = "+imageViewSurfaceHeight);
+                Log.i("prueba", "width = " + imageViewSurfaceWidth + ", height = " + imageViewSurfaceHeight);
 //                Toast.makeText(getApplicationContext(), "width = "+imageViewSurfaceWidth+", height = "+imageViewSurfaceHeight,
 //                        Toast.LENGTH_LONG).show();
                 //Si recién estoy cargando la imagen, cargo la marca de agua desde acá
-                if(bPreparandoImagen) {
+                if (bPreparandoImagen) {
                     dibujarConMarca();
                     bPreparandoImagen = false;
+                    if (bDirectShare) {
+                        compartirConMarca();
+//                        ActivityShareNow.instancia.finishAndRemoveTask();
+//                        finishAndRemoveTask();
+                    }
                 }
             }
         });
@@ -213,9 +225,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnCompartir.setOnClickListener(v -> {
-            BitmapDrawable bitmapDrawable = (BitmapDrawable) imgPrincipal.getDrawable();
-            Bitmap bitmap = bitmapDrawable.getBitmap();
-            compartirImagenConTexto(bitmap);
+            compartirConMarca();
         });
 
         btnAumentar.setOnClickListener(v -> {
@@ -289,13 +299,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void limpiarImageView()
-    {
+    private void compartirConMarca() {
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) imgPrincipal.getDrawable();
+        Bitmap bitmap = bitmapDrawable.getBitmap();
+        compartirImagenConTexto(bitmap);
+    }
+
+    private void limpiarImageView() {
         imgPrincipal.setImageDrawable(null);
     }
 
-    private void prepararImageView()
-    {
+    private void prepararImageView() {
 
         Resources res = getResources();
         Drawable drawablePlaceHolder;
@@ -380,25 +394,24 @@ public class MainActivity extends AppCompatActivity {
 
                         //Reviso que esté dentro de los límites del imageview para mover
                         boolean bMoverHorizontal =
-                                nPosicionXMarca + dx > 0 - nAnchoActualMarca / 2 && nPosicionXMarca +dx <= imgPrincipal.getWidth() - nAnchoActualMarca /3;
+                                nPosicionXMarca + dx > 0 - nAnchoActualMarca / 2 && nPosicionXMarca + dx <= imgPrincipal.getWidth() - nAnchoActualMarca / 3;
                         boolean bMoverVertical =
-                                nPosicionYMarca + dy > 0 - nAltoActualMarca / 2 && nPosicionYMarca +dy <= imgPrincipal.getHeight() - nAltoActualMarca /3;
+                                nPosicionYMarca + dy > 0 - nAltoActualMarca / 2 && nPosicionYMarca + dy <= imgPrincipal.getHeight() - nAltoActualMarca / 3;
 //                                y > nAltoActualMarca / 2 && y <= imgPrincipal.getHeight() - nAltoActualMarca /3;
 
-                        if(bMoverHorizontal) {
+                        if (bMoverHorizontal) {
                             nPosicionXMarca += dx;
                             mLastTouchX = x;
                         }
-                        if(bMoverVertical) {
+                        if (bMoverVertical) {
                             nPosicionYMarca += dy;
                             mLastTouchY = y;
                         }
 
-                            dibujarConMarca();
+                        dibujarConMarca();
 
 
-                            // Recordar esta posición para el siguiente evento
-
+                        // Recordar esta posición para el siguiente evento
 
 
                     }
@@ -505,9 +518,7 @@ public class MainActivity extends AppCompatActivity {
             seekBarTransparencia.setProgress(nOpacidadMarca);
 
             bLeerPosicionGuardada = true;
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG);
         }
 
@@ -541,12 +552,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-//    void recibirImagenEnviada(Intent intent) {
-        void recibirImagenEnviada(String szImagen) {
-        //String szImagen = intent.getStringExtra("uriImagen");
+    //    void recibirImagenEnviada(Intent intent) {
+    void recibirImagenEnviada(String szImagen) {
         uriExterno = Uri.parse(szImagen);
-        //uriExterno = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-        //Toast.makeText(getApplicationContext(), "Imagen desde segunda activity!", Toast.LENGTH_LONG).show();
 
     }
 
@@ -667,9 +675,8 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 nPosicionYAjustada = 0;
             }
-            canvas.drawBitmap(bmpMarca, (float)nPosicionXAjustada, (float)nPosicionYAjustada, paint);
-            if(bLeerPosicionGuardada)
-            {
+            canvas.drawBitmap(bmpMarca, (float) nPosicionXAjustada, (float) nPosicionYAjustada, paint);
+            if (bLeerPosicionGuardada) {
                 bLeerPosicionGuardada = false;
             }
 
@@ -686,10 +693,13 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(Intent.EXTRA_STREAM, uri);
 
         // texto para compartir
-        intent.putExtra(Intent.EXTRA_TEXT, "Compartiendo via WaterShare");
+        intent.putExtra(Intent.EXTRA_TEXT, "Shared via WaterShare");
+
+        // Control para no compartir dos veces con la misma app
+        intent.putExtra("watershare", true);
 
         // Asunto
-        intent.putExtra(Intent.EXTRA_SUBJECT, "Asunto del mensaje");
+        intent.putExtra(Intent.EXTRA_SUBJECT, "");
 
         // tipo imagen
         intent.setType("image/png");
@@ -727,7 +737,7 @@ public class MainActivity extends AppCompatActivity {
         // Crear matrix para manipulación
         Matrix matrix = new Matrix();
         // Cambiar tamaño de bitmap
-        matrix.postScale((float)scaleWidth, (float)scaleHeight);
+        matrix.postScale((float) scaleWidth, (float) scaleHeight);
         // Recrear el bitmap
         bmpResultado = Bitmap.createBitmap(
                 bm, 0, 0, width, height, matrix, false);
@@ -742,5 +752,27 @@ public class MainActivity extends AppCompatActivity {
         return redimensionarBitmap(bm, anchoRequerido, (int) nuevoAlto);
     }
 
+
+    //Salir del programa pulsando dos veces atrás
+    boolean bSalirPulsadoUnaVez = false;
+
+    @Override
+    public void onBackPressed() {
+        if (bSalirPulsadoUnaVez) {
+            super.onBackPressed();
+            return;
+        }
+
+        this.bSalirPulsadoUnaVez = true;
+        Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                bSalirPulsadoUnaVez = false;
+            }
+        }, 2000);
+    }
 
 }

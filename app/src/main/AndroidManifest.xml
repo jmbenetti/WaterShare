@@ -20,7 +20,7 @@
             android:name=".ActivityShareNow"
             android:exported="true"
             android:label="Share now"
-            android:theme="@style/Theme.WaterShare.NoActionBar" >
+            android:theme="@style/Theme.WaterShare.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 
@@ -32,14 +32,19 @@
         <activity
             android:name=".ActivityEdit"
             android:exported="true"
-            android:label="Edit watermark"
-            android:theme="@style/Theme.WaterShare.NoActionBar" >
+            android:label="Edit"
+            android:theme="@style/Theme.WaterShare.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
         <activity
