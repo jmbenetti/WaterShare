@@ -99,36 +99,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Recibo imagen compartida por sistema
-        // Get intent, action and MIME type
-
-        // Get intent, action and MIME type
-//        Intent intent = getIntent();
-//        String accion = intent.getAction();
-//        String type = intent.getType();
-
-        //Toast.makeText(getApplicationContext(), accion + ", " + type, Toast.LENGTH_LONG).show();
-
-        //-----
-
-        if (ActivityEdit.szUriRecibida != "") {
-            recibirImagenEnviada(ActivityEdit.szUriRecibida);
-        }
-
-        if (ActivityShareNow.szUriRecibida != "") {
-            recibirImagenEnviada(ActivityShareNow.szUriRecibida);
-            bDirectShare = true;
-        }
-
-
-        //----
-//        if (Intent.ACTION_SEND.equals(accion) && type != null) {
-//            //            if (type.startsWith("image/")) {
-//              if(type.startsWith("text/")) {
-//                recibirImagenEnviada(intent); // Handle single image being sent
-//            }
-//        }
-        //---Fin de recibir imagen
 
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         nDensidadPantalla = (int) (metrics.density * 160f);
@@ -188,26 +158,24 @@ public class MainActivity extends AppCompatActivity {
                 float imageViewSurfaceHeight = imgPrincipal.getHeight();
                 nAnchoDibujado = imageViewSurfaceWidth;
                 nAltoDibujado = imageViewSurfaceHeight;
-                Log.i("prueba", "width = " + imageViewSurfaceWidth + ", height = " + imageViewSurfaceHeight);
-//                Toast.makeText(getApplicationContext(), "width = "+imageViewSurfaceWidth+", height = "+imageViewSurfaceHeight,
-//                        Toast.LENGTH_LONG).show();
-                //Si recién estoy cargando la imagen, cargo la marca de agua desde acá
+                //Log.i("prueba", "width = " + imageViewSurfaceWidth + ", height = " + imageViewSurfaceHeight);
+
+
                 if (bPreparandoImagen) {
                     dibujarConMarca();
                     bPreparandoImagen = false;
                     if (bDirectShare) {
                         compartirConMarca();
-//                        ActivityShareNow.instancia.finishAndRemoveTask();
-//                        finishAndRemoveTask();
+//                        bDirectShare = false;
+//                        ActivityShareNow.szUriRecibida = "";
                     }
+//                    ActivityShareNow.szUriRecibida = "";
+//                    ActivityEdit.szUriRecibida = "";
                 }
             }
         });
 
 
-        if (uriExterno != null) {
-            definirImagenConUri(uriExterno);
-        }
 
         //Levanto la marca de agua por defecto guardada, si es que existe
         try {
@@ -222,11 +190,7 @@ public class MainActivity extends AppCompatActivity {
             //No hay marca guardada
         }
 
-        leerDatosMarca();
-        //La dibujo
-        limpiarImageView();
-        prepararImageView();
-        //dibujarConMarca();
+        prepararTodo();
 
 
         btnSave.setOnClickListener(v -> {
@@ -307,6 +271,46 @@ public class MainActivity extends AppCompatActivity {
             actCargarMarca.launch(miIntent);
         });
 
+    }
+
+    private void prepararTodo()
+    {
+        recibirUriActividades();
+        leerDatosMarca();
+        limpiarImageView();
+        prepararImageView();
+    }
+
+    private void recibirUriActividades()
+    {
+        if (ActivityEdit.szUriRecibida != "") {
+            recibirImagenEnviada(ActivityEdit.szUriRecibida);
+            ActivityEdit.instancia.finishAndRemoveTask();
+        }
+
+        if (ActivityShareNow.szUriRecibida != "") {
+            recibirImagenEnviada(ActivityShareNow.szUriRecibida);
+            ActivityShareNow.instancia.finishAndRemoveTask();
+            bDirectShare = true;
+        }
+
+        if (uriExterno != null) {
+            definirImagenConUri(uriExterno);
+            uriExterno = null;
+        }
+        ActivityShareNow.szUriRecibida = "";
+        ActivityEdit.szUriRecibida = "";
+
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        //Sólo inicializo si vengo de otra activity con datos compartidos
+        if (ActivityEdit.szUriRecibida != "" | ActivityShareNow.szUriRecibida !="") {
+            prepararTodo();
+        }
+        //Toast.makeText(getApplicationContext(), "Nuevo intent", Toast.LENGTH_LONG).show();
     }
 
     private void compartirConMarca() {

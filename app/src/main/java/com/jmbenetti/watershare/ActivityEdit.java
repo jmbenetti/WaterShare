@@ -1,5 +1,6 @@
 package com.jmbenetti.watershare;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -9,11 +10,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class ActivityEdit extends AppCompatActivity {
     public static String szUriRecibida = "";
+    public static Activity instancia;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
+
+        instancia = this;
 
         // Get intent, action and MIME type
         Intent intent = getIntent();
