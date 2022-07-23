@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
     float nAltoDibujado;
     boolean bPreparandoImagen;
     boolean bDirectShare;
+//    boolean bCerrarApp = false;
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -165,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
                     dibujarConMarca();
                     bPreparandoImagen = false;
                     if (bDirectShare) {
+//                        bCerrarApp = true;
                         compartirConMarca();
 //                        bDirectShare = false;
 //                        ActivityShareNow.szUriRecibida = "";
@@ -286,6 +288,7 @@ public class MainActivity extends AppCompatActivity {
         if (ActivityEdit.szUriRecibida != "") {
             recibirImagenEnviada(ActivityEdit.szUriRecibida);
             ActivityEdit.instancia.finishAndRemoveTask();
+            bDirectShare = false;
         }
 
         if (ActivityShareNow.szUriRecibida != "") {
@@ -307,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         //Sólo inicializo si vengo de otra activity con datos compartidos
+
         if (ActivityEdit.szUriRecibida != "" | ActivityShareNow.szUriRecibida !="") {
             prepararTodo();
         }
@@ -721,6 +725,19 @@ public class MainActivity extends AppCompatActivity {
         // compartir a través de...
         startActivity(Intent.createChooser(intent, "Share Via"));
     }
+
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        if(bCerrarApp) finishAndRemoveTask();
+        //Toast.makeText(getApplicationContext(), "Resume", Toast.LENGTH_LONG).show();
+//    }
+
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        if(bCerrarApp) finishAndRemoveTask();
+//    }
 
     // Recuperando la uri para compartir
     private Uri getmageToShare(Bitmap bitmap) {
