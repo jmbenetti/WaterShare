@@ -168,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
                     if (bDirectShare) {
 //                        bCerrarApp = true;
                         compartirConMarca();
+                        bDirectShare = false;
 //                        bDirectShare = false;
 //                        ActivityShareNow.szUriRecibida = "";
                     }
@@ -632,7 +633,8 @@ public class MainActivity extends AppCompatActivity {
         }
         //Ajusto la marca de agua según la escala manual
         if (bmpMarca != null) {
-            bmpMarca = redimensionarAnchoBitmap(bmpMarca, (int) (nAnchoPredeterminado * nEscala));
+            //bmpMarca = redimensionarAnchoBitmap(bmpMarca, (int) (nAnchoPredeterminado * nEscala));
+            bmpMarca = redimensionarAnchoBitmap(bmpMarca,(int)(nAnchoDibujado * nEscala) );
         }
 
 //        Bitmap bmpCanvas = bmpOriginal;
@@ -729,8 +731,7 @@ public class MainActivity extends AppCompatActivity {
 //    @Override
 //    protected void onResume() {
 //        super.onResume();
-//        if(bCerrarApp) finishAndRemoveTask();
-        //Toast.makeText(getApplicationContext(), "Resume", Toast.LENGTH_LONG).show();
+//        if(bDirectShare) bDirectShare = false;
 //    }
 
 //    @Override
